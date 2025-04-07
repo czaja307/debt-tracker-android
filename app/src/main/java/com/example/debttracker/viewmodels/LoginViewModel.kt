@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.debttracker.models.FirestoreUser
 import com.example.debttracker.models.User
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -121,7 +122,51 @@ class LoginViewModel : ViewModel() {
             }
     }
 
+    fun sendFriendRequest(toEmail: String) {
+        viewModelScope.launch {
+            try {
+                val querySnapshot = db.collection("users")
+                    .whereEqualTo("email", toEmail)
+                    .get()
+                    .await()
+                if (querySnapshot.documents.isEmpty()) {
+                    hasError.postValue(true)
+                    errorMessage.postValue("User not found")
+                    return@launch
+                }
 
+                val friendDoc = querySnapshot.documents.first()
+                val friendData = friendDoc.data ?: run {
+                    hasError.postValue(true)
+                    errorMessage.postValue("User not found")
+                    return@launch
+                }
+                val friend = FirestoreUser.fromMap(friendData) ?: run {
+                    hasError.postValue(true)
+                    errorMessage.postValue("A parsing error occurred")
+                    return@launch
+                }
+                val current = _currentUser.value?.uid ?: return@launch
+                val currentUserRef = db.collection("users").document(current)
+                val friendRef = db.collection("users").document(friend.uid)
+
+                currentUserRef.update("outgoingRequests", FieldValue.arrayUnion(friend.uid)).await()
+                friendRef.update("incomingRequests", FieldValue.arrayUnion(current)).await()
+
+                _storedUser.value?.let { user ->
+                    val updatedOutgoingRequests =
+                        user.outgoingRequests.toMutableList().apply { add(friend.uid) }
+                    _storedUser.postValue(user.copy(outgoingRequests = updatedOutgoingRequests))
+                }
+            } catch (e: Exception) {
+                hasError.postValue(true)
+                errorMessage.postValue(e.localizedMessage ?: "Error while sending friend request")
+            }
+        }
+    }
 }
+
+
+
 
 
