@@ -15,25 +15,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.debttracker.ui.components.BackTopAppBar
 import com.example.debttracker.ui.components.FriendInvitationField
+import com.example.debttracker.ui.theme.AppBackgroundColor
+import com.example.debttracker.ui.theme.GlobalTopBarColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InvitationsScreen(navController: NavHostController) {
     Scaffold(
+        containerColor = AppBackgroundColor,
         topBar = {
-            TopAppBar(
-                title = { Text("Invitations") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
-            )
+            BackTopAppBar("Invitations", navController)
         }
     ) { innerPadding ->
         Column(

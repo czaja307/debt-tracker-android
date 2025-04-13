@@ -1,6 +1,9 @@
 package com.example.debttracker.navigation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -9,21 +12,26 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.debttracker.ui.screens.*
-import com.example.debttracker.ui.theme.BottomNavBarColor
+import com.example.debttracker.ui.theme.LimeGreen
 
-sealed class Screen(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
+sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     object Home : Screen("home", "Home", Icons.Filled.Home)
     object NewTransaction : Screen("new_transaction", "New Transaction", Icons.Filled.Add)
     object Friends : Screen("friends", "Friends", Icons.Filled.Person)
@@ -35,23 +43,13 @@ sealed class Screen(val route: String, val title: String, val icon: androidx.com
 @Composable
 fun NavGraph() {
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                listOf(Screen.Home, Screen.NewTransaction, Screen.Friends).forEach { screen ->
-                    NavigationBarItem(
-                        icon = { Icon(imageVector = screen.icon, contentDescription = screen.title) },
-                        label = { Text(screen.title) },
-                        selected = navController.currentBackStackEntryAsState().value?.destination?.route == screen.route,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.startDestinationRoute!!) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    )
-                }
+            if (currentRoute in listOf(Screen.Home.route, Screen.Friends.route)) {
+                CustomBottomNavBar(navController, currentRoute)
             }
         }
     ) { innerPadding ->
@@ -71,26 +69,49 @@ fun NavGraph() {
 }
 
 @Composable
-fun BottomNavBar(navController: NavHostController) {
-    val bottomNavColor = BottomNavBarColor
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
+fun CustomBottomNavBar(navController: NavHostController, currentRoute: String?) {
     NavigationBar(
-        containerColor = bottomNavColor
+        containerColor = Color.Black.copy(alpha = 0.5f)
     ) {
         listOf(Screen.Home, Screen.NewTransaction, Screen.Friends).forEach { screen ->
             NavigationBarItem(
-                icon = { Icon(imageVector = screen.icon, contentDescription = screen.title) },
-                label = { Text(screen.title, color = Color.White) },
                 selected = currentRoute == screen.route,
                 onClick = {
-                    if (currentRoute != screen.route) {
-                        navController.navigate(screen.route) {
-                            popUpTo(navController.graph.startDestinationRoute!!) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
+                    navController.navigate(screen.route) {
+                        popUpTo(navController.graph.startDestinationRoute ?: Screen.Home.route) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                icon = {
+                    if (screen.route == Screen.NewTransaction.route) {
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                //.offset(y = (-20).dp)
+                                .clip(CircleShape)
+                                .background(LimeGreen),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = screen.icon,
+                                contentDescription = screen.title,
+                                tint = Color.Black,
+                                modifier = Modifier.size(40.dp)
+                            )
                         }
+                    } else {
+                        Icon(
+                            imageVector = screen.icon,
+                            contentDescription = screen.title,
+                            tint = Color.White,
+                            modifier = Modifier.size(30.dp)
+                        )
+                    }
+                },
+                label = {
+                    if (screen.route != Screen.NewTransaction.route) {
+                        Text(text = screen.title, color = Color.White, fontSize = 12.sp)
                     }
                 }
             )

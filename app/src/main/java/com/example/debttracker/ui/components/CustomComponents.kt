@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.*
@@ -18,29 +17,27 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalDensity
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.TextUnit
 import com.example.debttracker.R
 import com.example.debttracker.ui.theme.BottomNavBarColor
+import com.example.debttracker.ui.theme.ComponentCornerRadius
 import com.example.debttracker.ui.theme.GlobalTopBarColor
+import com.example.debttracker.ui.theme.LimeGreen
 
 // a) TransactionField – kafelek z datą i kwotą transakcji
 @Composable
 fun TransactionField(date: String, amount: String, modifier: Modifier = Modifier) {
     Surface(
         color = Color.DarkGray,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(ComponentCornerRadius),
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(5f)
@@ -73,7 +70,7 @@ fun FriendField(
 
     Surface(
         color = Color.DarkGray,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(ComponentCornerRadius),
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(3.5f)
@@ -89,7 +86,7 @@ fun FriendField(
                 contentDescription = "Friend image",
                 modifier = Modifier
                     .size(50.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(ComponentCornerRadius))
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(verticalArrangement = Arrangement.Center) {
@@ -119,7 +116,7 @@ fun FriendInvitationField(
 
     Surface(
         color = Color.DarkGray,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(ComponentCornerRadius),
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(2f)
@@ -135,7 +132,7 @@ fun FriendInvitationField(
                 contentDescription = "Invitation image",
                 modifier = Modifier
                     .size(50.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(ComponentCornerRadius))
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -163,18 +160,33 @@ fun FriendInvitationField(
 }
 
 // d) CustomButton – (na razie zmienia kolor po wciśnięciu, kiedyś to naprawię żeby był uniwersalny)
+enum class ButtonVariant {
+    GREY, LIME
+}
 @Composable
-fun CustomButton(icon: ImageVector, text: String, modifier: Modifier = Modifier) {
-    var clicked by remember { mutableStateOf(false) }
-    val backgroundColor = if (clicked) Color.Green else Color.DarkGray
+fun CustomButton(
+    variant: ButtonVariant = ButtonVariant.GREY,
+    icon: ImageVector? = null,
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor = when (variant) {
+        ButtonVariant.LIME -> LimeGreen
+        ButtonVariant.GREY -> Color.DarkGray
+    }
+    val textColor = when (variant) {
+        ButtonVariant.LIME -> Color.White
+        ButtonVariant.GREY -> Color.LightGray
+    }
 
     Surface(
         color = backgroundColor,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(ComponentCornerRadius),
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(5f)
-            .clickable { clicked = !clicked }
+            .clickable { onClick() }
     ) {
         Row(
             modifier = Modifier
@@ -182,23 +194,33 @@ fun CustomButton(icon: ImageVector, text: String, modifier: Modifier = Modifier)
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(imageVector = icon, contentDescription = text, tint = Color.White)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(text = text, color = Color.White)
+            if (icon != null) {
+                Icon(imageVector = icon, contentDescription = text, tint = textColor)
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(text = text, color = textColor)
         }
     }
 }
 
+
 // e) CustomTextField – textfield z etykietą
 @Composable
-fun CustomTextField(label: String, text: String, onTextChange: (String) -> Unit, modifier: Modifier = Modifier) {
+fun CustomTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    placeholder: String,
+    modifier: Modifier = Modifier
+) {
     val textFieldBackground = BottomNavBarColor
     Column(modifier = modifier.fillMaxWidth()) {
         Text(text = label, color = Color.White)
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
-            value = text,
-            onValueChange = onTextChange,
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = { Text(text = placeholder, color = Color.White.copy(alpha = 0.7f)) },
             modifier = Modifier.fillMaxWidth(),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = textFieldBackground,
@@ -209,9 +231,9 @@ fun CustomTextField(label: String, text: String, onTextChange: (String) -> Unit,
                 focusedLabelColor = Color.White,
                 unfocusedLabelColor = Color.White,
                 disabledTextColor = Color.Gray,
-                disabledLabelColor = Color.Gray,
+                disabledLabelColor = Color.Gray
             ),
-            shape = RoundedCornerShape(8.dp)
+            shape = RoundedCornerShape(ComponentCornerRadius)
         )
     }
 }
@@ -277,12 +299,13 @@ fun CustomEnumPickField(
 
 // g) BalanceField – pole wyświetlające bilans (tekst po lewej i kwotę po prawej, kolor zależny od wartości)
 @Composable
-fun BalanceField(balance: Float, modifier: Modifier = Modifier) {
-    val label = if (balance >= 0) "People owe you:" else "You owe people:"
-    val balanceColor = if (balance >= 0) Color.Green else Color.Red
+fun BalanceField(label: String, balance: Float, modifier: Modifier = Modifier) {
+    //val label = if (balance >= 0) "People owe you:" else "You owe people:"
+    //val balanceColor = if (balance >= 0) Color.Green else Color.Red
+    val balanceColor = Color.White
     Surface(
         color = Color.DarkGray,
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(ComponentCornerRadius),
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(5f)
@@ -297,5 +320,64 @@ fun BalanceField(balance: Float, modifier: Modifier = Modifier) {
             Text(text = label, color = Color.White)
             Text(text = balance.toString(), color = balanceColor)
         }
+    }
+}
+
+// h) CustomText - zwykły tekst z kolorem
+@Composable
+fun CustomText(
+    text: String,
+    fontSize: TextUnit,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = text,
+        fontSize = fontSize,
+        color = Color.White,
+        modifier = modifier
+    )
+}
+
+// i) CustomNumberTextField - textfield z etykietą i ograniczeniem do cyfr
+@Composable
+fun CustomNumberField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    placeholder: String,
+    modifier: Modifier = Modifier
+) {
+    val textFieldBackground = BottomNavBarColor
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(text = label, color = Color.White)
+        Spacer(modifier = Modifier.height(4.dp))
+        OutlinedTextField(
+            value = value,
+            onValueChange = { newValue ->
+                if (newValue.isEmpty() || newValue.matches(Regex("^\\d*(\\.\\d{0,2})?\$"))) {
+                    onValueChange(newValue)
+                }
+            },
+            placeholder = {
+                Text(
+                    text = placeholder,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = textFieldBackground,
+                unfocusedContainerColor = textFieldBackground,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                cursorColor = Color.White,
+                focusedLabelColor = Color.White,
+                unfocusedLabelColor = Color.White,
+                disabledTextColor = Color.Gray,
+                disabledLabelColor = Color.Gray
+            ),
+            shape = RoundedCornerShape(ComponentCornerRadius)
+        )
     }
 }

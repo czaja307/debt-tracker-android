@@ -26,12 +26,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.ui.unit.dp
+import com.example.debttracker.ui.components.CustomButton
 import com.example.debttracker.ui.components.FriendField
 import com.example.debttracker.ui.components.GlobalTopAppBar
 
 @Composable
 fun FriendsScreen(navController: NavHostController) {
-    Scaffold (
+    Scaffold(
         topBar = { GlobalTopAppBar(navController) },
         content = { innerPadding ->
             Column(
@@ -45,13 +46,21 @@ fun FriendsScreen(navController: NavHostController) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Button(onClick = { navController.navigate("add_friend") }) {
-                        Text("Add Friend")
-                    }
-                    Button(onClick = { navController.navigate("invitations") }) {
-                        Text("Invitations")
-                    }
+                    CustomButton(
+                        text = "Add Friend",
+                        onClick = { navController.navigate("add_friend") },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    CustomButton(
+                        text = "Invitations",
+                        onClick = { navController.navigate("invitations") },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
+
                 FriendField(friendName = "John Doe", balance = 25.0f)
                 FriendField(friendName = "John Doe", balance = -25.0f)
                 FriendField(friendName = "John Doe", balance = 12.30f)
