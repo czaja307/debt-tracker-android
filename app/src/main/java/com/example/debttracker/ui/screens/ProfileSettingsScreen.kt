@@ -14,21 +14,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.debttracker.ui.components.BackTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileSettingsScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Profile Settings") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors()
-            )
+            BackTopAppBar("Profile Settings", navController)
         },
         content = { innerPadding ->
             Text(

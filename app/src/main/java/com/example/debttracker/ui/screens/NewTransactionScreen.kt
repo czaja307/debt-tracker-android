@@ -9,20 +9,31 @@ import androidx.compose.ui.Modifier
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.debttracker.ui.components.BackTopAppBar
 import com.example.debttracker.ui.components.CustomEnumPickField
 import com.example.debttracker.ui.components.BalanceField
+import com.example.debttracker.ui.components.ButtonVariant
+import com.example.debttracker.ui.components.CustomButton
+import com.example.debttracker.ui.components.CustomNumberField
+import com.example.debttracker.ui.components.CustomTextField
 import com.example.debttracker.ui.components.FriendInvitationField
 import com.example.debttracker.ui.components.GlobalTopAppBar
 
 @Composable
 fun NewTransactionScreen(navController: NavHostController) {
-    Scaffold (
-        topBar = { GlobalTopAppBar(navController) },
+    var amount by remember { mutableStateOf("") }
+    var currency by remember { mutableStateOf("") }
+    var payer by remember { mutableStateOf("") }
+    var debtor by remember { mutableStateOf("") }
+
+    Scaffold(
+        topBar = { BackTopAppBar("Add a new transaction", navController) },
         content = { innerPadding ->
             Column(
                 modifier = Modifier
@@ -31,28 +42,48 @@ fun NewTransactionScreen(navController: NavHostController) {
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(text = "New Transaction Content", color = androidx.compose.ui.graphics.Color.White)
-                var selectedOption by remember { mutableStateOf("Option 1") }
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    CustomEnumPickField(
-                        label = "Select Option",
-                        options = listOf("Option 1", "Option 2", "Option 3"),
-                        selectedOption = selectedOption,
-                        onOptionSelected = { selectedOption = it }
-                    )
-                    BalanceField(balance = 123.45f)
-                    FriendInvitationField(
-                        friendName = "Jane Smith",
-                        username = "@jane_s",
-                        onAccept = { /* test action */ },
-                        onReject = { /* test action */ }
-                    )
-                }
+                CustomNumberField(
+                    value = amount,
+                    onValueChange = { amount = it },
+                    label = "Enter an amount",
+                    placeholder = "$0.00",
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                CustomEnumPickField(
+                    label="Choose Currency",
+                    options = listOf("USD", "EUR", "PLN"),
+                    selectedOption = currency,
+                    onOptionSelected = { currency = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                CustomEnumPickField(
+                    label = "Who was paying?",
+                    options = listOf("You", "Friend 1", "Friend 2"),
+                    selectedOption = payer,
+                    onOptionSelected = { payer = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                CustomEnumPickField(
+                    label = "Who was in debt?",
+                    options = listOf("You", "Friend 1", "Friend 2"),
+                    selectedOption = debtor,
+                    onOptionSelected = { debtor = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                CustomButton(
+                    variant = ButtonVariant.LIME,
+                    icon = Icons.Default.Add,
+                    text = "Add",
+                    onClick = {
+                        // testowa akcja typu dodanie transakcji
+                        navController.navigateUp()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     )

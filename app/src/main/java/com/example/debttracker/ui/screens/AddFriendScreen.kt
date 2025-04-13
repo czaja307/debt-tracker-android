@@ -17,6 +17,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.debttracker.ui.components.BackTopAppBar
+import com.example.debttracker.ui.components.CustomButton
+import com.example.debttracker.ui.components.CustomTextField
+import com.example.debttracker.ui.theme.AppBackgroundColor
+import com.example.debttracker.ui.theme.GlobalTopBarColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,17 +29,8 @@ fun AddFriendScreen(navController: NavHostController) {
     var username by remember { mutableStateOf("") }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Add Friend") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
-            )
-        }
+        containerColor = AppBackgroundColor,
+        topBar = { BackTopAppBar("Add Friend", navController) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -43,21 +39,20 @@ fun AddFriendScreen(navController: NavHostController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            OutlinedTextField(
+            CustomTextField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Enter username") },
+                label = "Enter username",
+                placeholder = "username here",
                 modifier = Modifier.fillMaxWidth()
             )
-            Button(
+            CustomButton(
+                text = "Send Invite",
                 onClick = {
                     // testowa akcja typu wysłanie zaproszenia do znaj.
                     navController.navigateUp()
                 },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Send Invite")
-            }
+            )
         }
     }
 }
