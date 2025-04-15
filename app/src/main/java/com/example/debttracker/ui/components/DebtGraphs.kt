@@ -2,16 +2,19 @@ package com.example.debttracker.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.github.tehras.charts.piechart.PieChart
 import com.github.tehras.charts.piechart.PieChartData
 import com.github.tehras.charts.piechart.renderer.SimpleSliceDrawer
@@ -54,16 +57,23 @@ fun DebtOverTimeGraph() {
         }
     }
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .background(Color(0xFF1C1C1C))
-                .padding(16.dp)
-        ) {
-            JetpackComposeBasicLineChart(modelProducer)
+        Column(modifier = Modifier.background(Color(0xFF1C1C1C))) {
+            Text(
+                text = "My current debt",
+                fontSize = 20.sp,
+                color = Color(0xFFE3E3E3),
+                modifier = Modifier.padding(top = 24.dp, start = 24.dp)
+            )
+            Box(
+                modifier = Modifier
+                    .background(Color(0xFF1C1C1C))
+                    .padding(start = 16.dp, end = 24.dp, bottom = 24.dp, top = 16.dp)
+            ) {
+                JetpackComposeBasicLineChart(modelProducer)
+            }
         }
     }
 }
@@ -113,20 +123,27 @@ fun DebtWheelGraph() {
     )
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .background(Color(0xFF1C1C1C))
-                .padding(16.dp)
-        ) {
-            PieChart(
-                pieChartData = PieChartData(slices = debtData),
-                sliceDrawer = SimpleSliceDrawer(100f),
-                modifier = Modifier.fillMaxWidth(),
+        Column(modifier = Modifier.background(Color(0xFF1C1C1C))) {
+            Text(
+                text = "Current debt",
+                fontSize = 20.sp,
+                color = Color(0xFFE3E3E3),
+                modifier = Modifier.padding(top = 24.dp, start = 24.dp)
             )
+            Box(
+                modifier = Modifier
+                    .background(Color(0xFF1C1C1C))
+                    .padding(24.dp)
+            ) {
+                PieChart(
+                    pieChartData = PieChartData(slices = debtData),
+                    sliceDrawer = SimpleSliceDrawer(100f),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
     }
 }
