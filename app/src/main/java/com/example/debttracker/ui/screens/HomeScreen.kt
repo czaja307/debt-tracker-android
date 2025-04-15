@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.example.debttracker.ui.components.BalanceField
+import com.example.debttracker.ui.components.CustomBottomSheetScaffold
 import com.example.debttracker.ui.components.CustomText
 import com.example.debttracker.ui.components.DebtOverTimeGraph
 import com.example.debttracker.ui.components.DebtWheelGraph
@@ -40,40 +41,8 @@ fun HomeScreen(navController: NavHostController) {
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                BottomSheetScaffold (
-                    sheetContent = {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(3000.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            var textValue by remember { mutableStateOf("") }
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                // ---- DOLNY PANEL TUTAJ -----------
-                                BalanceField("People owe you", balance = 123.45f)
-                                DebtOverTimeGraph()
-                                DebtWheelGraph()
-                                BalanceField("My total debt", balance = 123.45f)
-                                BalanceField("Total debt to me", balance = 123.45f)
-                                //TransactionField(date = "2025-04-08", amount = "$50.00")
-                                //CustomButton(icon = Icons.Filled.Info, text = "Test Button")
-                                //CustomTextField(label = "Description", text = textValue, onTextChange = { textValue = it })
-                            }
-                        }
-                    },
-                    sheetContainerColor = LimeGreen,
-                    sheetPeekHeight = (LocalConfiguration.current.screenHeightDp * 0.4).dp,
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.TopCenter
-                    ) {
+                CustomBottomSheetScaffold(
+                    content = {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
@@ -87,8 +56,26 @@ fun HomeScreen(navController: NavHostController) {
                                 fontSize = 64.sp
                             )
                         }
-                    }
-                }
+                    },
+                    sheetContent = {
+                        var textValue by remember { mutableStateOf("") }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            BalanceField("People owe you", balance = 123.45f)
+                            DebtOverTimeGraph()
+                            DebtWheelGraph()
+                            BalanceField("My total debt", balance = 123.45f)
+                            BalanceField("Total debt to me", balance = 123.45f)
+                            //TransactionField(date = "2025-04-08", amount = "$50.00")
+                            //CustomButton(icon = Icons.Filled.Info, text = "Test Button")
+                            //CustomTextField(label = "Description", text = textValue, onTextChange = { textValue = it })
+                        }
+                    },
+                )
             }
         }
     )

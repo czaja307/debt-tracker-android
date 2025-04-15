@@ -24,10 +24,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.debttracker.ui.screens.*
 import com.example.debttracker.ui.theme.LimeGreen
 
@@ -64,6 +66,13 @@ fun NavGraph() {
             composable(Screen.AddFriend.route) { AddFriendScreen(navController) }
             composable(Screen.Invitations.route) { InvitationsScreen(navController) }
             composable(Screen.ProfileSettings.route) { ProfileSettingsScreen(navController) }
+            composable(
+                route = "friend_info/{friendId}",
+                arguments = listOf(navArgument("friendId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val friendId = backStackEntry.arguments?.getString("friendId") ?: ""
+                FriendInfoScreen(navController, friendId)
+            }
         }
     }
 }
