@@ -15,22 +15,33 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 import androidx.compose.foundation.layout.fillMaxWidth
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.TextUnit
+import androidx.navigation.NavHostController
 import com.example.debttracker.R
+import com.example.debttracker.ui.screens.User
 import com.example.debttracker.ui.theme.BottomNavBarColor
 import com.example.debttracker.ui.theme.ComponentCornerRadius
 import com.example.debttracker.ui.theme.GlobalTopBarColor
 import com.example.debttracker.ui.theme.LimeGreen
+import kotlin.math.abs
 
 // a) TransactionField – kafelek z datą i kwotą transakcji
 @Composable
@@ -58,15 +69,18 @@ fun TransactionField(date: String, amount: String, modifier: Modifier = Modifier
 // b) FriendField – kafelek z danymi o znajomym
 @Composable
 fun FriendField(
-    friendName: String,
-    balance: Float,
-    imageRes: Int? = null, // jak null to bedzie placeholder.jpeg
+    friend: User,
+    navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
-    val painter = if (imageRes != null)
-        painterResource(id = imageRes)
+    val painter = if (friend.imageRes != null)
+        painterResource(id = friend.imageRes)
     else
         painterResource(id = R.drawable.placeholder)
+
+    val formattedBalance = String.format("%.2f", abs(friend.balance))
+    val balanceText = if (friend.balance >= 0) "+$$formattedBalance" else "-$$formattedBalance"
+    val balanceColor = if (friend.balance >= 0f) Color.Green else Color.Red
 
     Surface(
         color = Color.DarkGray,
@@ -74,26 +88,41 @@ fun FriendField(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(3.5f)
+            .clickable {
+                navController.navigate("friend_info/${friend.id}")
+            }
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(16.dp)
         ) {
             Image(
                 painter = painter,
                 contentDescription = "Friend image",
                 modifier = Modifier
-                    .size(50.dp)
+                    .fillMaxHeight()
                     .clip(RoundedCornerShape(ComponentCornerRadius))
             )
             Spacer(modifier = Modifier.width(16.dp))
-            Column(verticalArrangement = Arrangement.Center) {
-                Text(text = friendName, color = Color.White)
-                val balanceText = "Balance: $balance"
-                val balanceColor = if (balance >= 0f) Color.Green else Color.Red
-                Text(text = balanceText, color = balanceColor)
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .weight(1f),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = friend.name,
+                    color = Color.White,
+                    fontSize = 16.sp
+                )
+                Text(
+                    text = balanceText,
+                    color = balanceColor,
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
@@ -119,7 +148,7 @@ fun FriendInvitationField(
         shape = RoundedCornerShape(ComponentCornerRadius),
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(2f)
+            .aspectRatio(2.25f)
     ) {
         Row(
             modifier = Modifier
@@ -131,26 +160,54 @@ fun FriendInvitationField(
                 painter = painter,
                 contentDescription = "Invitation image",
                 modifier = Modifier
-                    .size(50.dp)
+                    .fillMaxHeight()
                     .clip(RoundedCornerShape(ComponentCornerRadius))
             )
             Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = friendName, color = Color.White)
-                Text(text = username, color = Color.White)
-                Row {
-                    IconButton(onClick = onAccept) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.Start
+            ) {
+                Column {
+                    Text(
+                        text = friendName,
+                        color = Color.White,
+                        fontSize = 20.sp
+                    )
+                    Text(
+                        text = username,
+                        color = Color.White,
+                        fontSize = 16.sp
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    IconButton(
+                        onClick = onAccept,
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.Check,
                             contentDescription = "Accept",
-                            tint = Color.White
+                            tint = Color.White,
+                            modifier = Modifier.size(48.dp)
                         )
                     }
-                    IconButton(onClick = onReject) {
+                    IconButton(
+                        onClick = onReject,
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.Close,
                             contentDescription = "Reject",
-                            tint = Color.White
+                            tint = Color.White,
+                            modifier = Modifier.size(48.dp)
                         )
                     }
                 }
@@ -379,5 +436,76 @@ fun CustomNumberField(
             ),
             shape = RoundedCornerShape(ComponentCornerRadius)
         )
+    }
+}
+
+// j) CustomUserAvatar - kafelek z awatarem użytkownika
+@Composable
+fun CustomUserAvatar(
+    image: ImageBitmap?,
+    editable: Boolean,
+    onEditClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier) {
+        Image(
+            painter = if (image != null) {
+                BitmapPainter(image)
+            } else {
+                painterResource(id = R.drawable.profile_pic)
+            },
+            contentDescription = "User Avatar",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape)
+                .background(Color.Gray)
+        )
+        if (editable) {
+            IconButton(
+                onClick = onEditClick,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .size(32.dp)
+                    .background(color = Color.White, shape = CircleShape)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit Avatar",
+                    tint = Color.Black,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+// k) CustomBottomSheetScaffold - własny bottom sheet z kolorem i kształtem
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomBottomSheetScaffold(
+    sheetContent: @Composable () -> Unit,
+    content: @Composable () -> Unit
+) {
+    BottomSheetScaffold (
+        sheetContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3000.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                sheetContent()
+            }
+        },
+        sheetContainerColor = LimeGreen,
+        sheetPeekHeight = (LocalConfiguration.current.screenHeightDp * 0.4).dp,
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            content()
+        }
     }
 }

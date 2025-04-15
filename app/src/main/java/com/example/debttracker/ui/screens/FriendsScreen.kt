@@ -26,12 +26,32 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+//import com.example.debttracker.models.User
 import com.example.debttracker.ui.components.CustomButton
+import com.example.debttracker.ui.components.CustomText
 import com.example.debttracker.ui.components.FriendField
 import com.example.debttracker.ui.components.GlobalTopAppBar
 
+// temporary, kiedyś sobie zamienie na models.User,
+// ale nie wiem czy ta klasa nie ulegnie jeszcze zmienom różnym
+data class User(
+    val id: String,
+    val name: String,
+    val balance: Float,
+    val imageRes: Int? = null
+)
+
 @Composable
-fun FriendsScreen(navController: NavHostController) {
+fun FriendsScreen(
+    navController: NavHostController,
+    friendList: List<User> = listOf(
+        User(id = "1", name = "John Doe", balance = 25.0f),
+        User(id = "2", name = "Jane Doe", balance = -15.5f),
+        User(id = "3", name = "Alice Smith", balance = 12.3f),
+        User(id = "4", name = "Bob Johnson", balance = 55.0f)
+    )
+) {
     Scaffold(
         topBar = { GlobalTopAppBar(navController) },
         content = { innerPadding ->
@@ -61,10 +81,24 @@ fun FriendsScreen(navController: NavHostController) {
                     )
                 }
 
-                FriendField(friendName = "John Doe", balance = 25.0f)
-                FriendField(friendName = "John Doe", balance = -25.0f)
-                FriendField(friendName = "John Doe", balance = 12.30f)
-                FriendField(friendName = "John Doe", balance = 55.0f)
+                if (friendList.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CustomText(
+                            text = "You have no friends added",
+                            fontSize = 20.sp,
+                        )
+                    }
+                } else {
+                    friendList.forEach { friend ->
+                        FriendField(
+                            friend = friend,
+                            navController = navController
+                        )
+                    }
+                }
             }
         }
     )
