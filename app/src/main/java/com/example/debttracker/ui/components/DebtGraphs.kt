@@ -6,13 +6,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
+import com.github.tehras.charts.piechart.PieChart
+import com.github.tehras.charts.piechart.PieChartData
+import com.github.tehras.charts.piechart.renderer.SimpleSliceDrawer
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
@@ -105,10 +107,28 @@ private fun JetpackComposeBasicLineChart(
 
 @Composable
 fun DebtWheelGraph() {
-    // placeholder for the debt graph
-    // allegedly i heard you can use a library like MPAndroidChart or any other charting library to implement this
-    // as for now its a placeholder text only
-    Text(text = "Debt Wheel Graph Placeholder")
+    val debtData = listOf(
+        PieChartData.Slice(value = 40f, color = Color(0xFF3B4C00)), // Example: 40% in green
+        PieChartData.Slice(value = 30f, color = Color(0xFFB4DD1E)), // Example: 30% in orange
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .background(Color(0xFF1C1C1C))
+                .padding(16.dp)
+        ) {
+            PieChart(
+                pieChartData = PieChartData(slices = debtData),
+                sliceDrawer = SimpleSliceDrawer(100f),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
 }
 
 
