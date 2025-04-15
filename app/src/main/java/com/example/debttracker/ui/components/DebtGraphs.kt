@@ -36,54 +36,11 @@ import com.patrykandpatrick.vico.core.common.component.TextComponent
 import com.patrykandpatrick.vico.core.common.data.ExtraStore
 import kotlinx.coroutines.runBlocking
 
-private val data = mapOf(
-    "Mon" to 40f,
-    "Tue" to 30f,
-    "Wed" to 50f,
-    "Thu" to 70f,
-    "Fri" to 110f,
-    "Sat" to 100f,
-    "Sun" to 20f,
-)
-
-@Composable
-fun DebtOverTimeGraph() {
-    val modelProducer = remember { CartesianChartModelProducer() }
-
-    runBlocking {
-        modelProducer.runTransaction {
-            lineSeries { series(data.values) }
-            extras { it[BottomAxisLabelKey] = data.keys.toList() }
-        }
-    }
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        Column(modifier = Modifier.background(Color(0xFF1C1C1C))) {
-            Text(
-                text = "My current debt",
-                fontSize = 20.sp,
-                color = Color(0xFFE3E3E3),
-                modifier = Modifier.padding(top = 24.dp, start = 24.dp)
-            )
-            Box(
-                modifier = Modifier
-                    .background(Color(0xFF1C1C1C))
-                    .padding(start = 16.dp, end = 24.dp, bottom = 24.dp, top = 16.dp)
-            ) {
-                JetpackComposeBasicLineChart(modelProducer)
-            }
-        }
-    }
-}
-
 private val BottomAxisLabelKey = ExtraStore.Key<List<String>>()
 
 private val BottomAxisValueFormatter = CartesianValueFormatter { context, x, _ ->
     context.model.extraStore[BottomAxisLabelKey][x.toInt()]
 }
-
 
 @Composable
 private fun JetpackComposeBasicLineChart(
@@ -115,13 +72,57 @@ private fun JetpackComposeBasicLineChart(
     )
 }
 
+// TODO: Replace with real data passed via ViewModel and constructor
+private val dataLineGraph = mapOf(
+    "Mon" to 40f,
+    "Tue" to 30f,
+    "Wed" to 50f,
+    "Thu" to 70f,
+    "Fri" to 110f,
+    "Sat" to 100f,
+    "Sun" to 20f,
+)
+
+@Composable
+fun DebtOverTimeGraph() {
+    val modelProducer = remember { CartesianChartModelProducer() }
+
+    runBlocking {
+        modelProducer.runTransaction {
+            lineSeries { series(dataLineGraph.values) }
+            extras { it[BottomAxisLabelKey] = dataLineGraph.keys.toList() }
+        }
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+    ) {
+        Column(modifier = Modifier.background(Color(0xFF1C1C1C))) {
+            Text(
+                text = "My current debt",
+                fontSize = 20.sp,
+                color = Color(0xFFE3E3E3),
+                modifier = Modifier.padding(top = 24.dp, start = 24.dp)
+            )
+            Box(
+                modifier = Modifier
+                    .background(Color(0xFF1C1C1C))
+                    .padding(start = 16.dp, end = 24.dp, bottom = 24.dp, top = 16.dp)
+            ) {
+                JetpackComposeBasicLineChart(modelProducer)
+            }
+        }
+    }
+}
+
+// TODO: Replace with real data passed via ViewModel and constructor
+private val dataPieChart = listOf(
+    PieChartData.Slice(value = 40f, color = Color(0xFF3B4C00)),
+    PieChartData.Slice(value = 30f, color = Color(0xFFB4DD1E)),
+)
+
 @Composable
 fun DebtWheelGraph() {
-    val debtData = listOf(
-        PieChartData.Slice(value = 40f, color = Color(0xFF3B4C00)),
-        PieChartData.Slice(value = 30f, color = Color(0xFFB4DD1E)),
-    )
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -139,7 +140,7 @@ fun DebtWheelGraph() {
                     .padding(24.dp)
             ) {
                 PieChart(
-                    pieChartData = PieChartData(slices = debtData),
+                    pieChartData = PieChartData(slices = dataPieChart),
                     sliceDrawer = SimpleSliceDrawer(100f),
                     modifier = Modifier.fillMaxWidth(),
                 )
