@@ -108,8 +108,8 @@ private fun JetpackComposeBasicLineChart(
 @Composable
 fun DebtWheelGraph() {
     val debtData = listOf(
-        PieChartData.Slice(value = 40f, color = Color(0xFF3B4C00)), // Example: 40% in green
-        PieChartData.Slice(value = 30f, color = Color(0xFFB4DD1E)), // Example: 30% in orange
+        PieChartData.Slice(value = 40f, color = Color(0xFF3B4C00)),
+        PieChartData.Slice(value = 30f, color = Color(0xFFB4DD1E)),
     )
 
     Card(
@@ -130,46 +130,3 @@ fun DebtWheelGraph() {
         }
     }
 }
-
-
-//@Composable
-//fun DebtOverTimeGraph() {
-//    val darkBackground = Color(0xFF1C1C1C) // TODO: Replace color with your theme's background color
-//    val accentGreen = Color(0xFFCDDC39) // TODO: Replace color with your theme's accent color
-//    Card(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .height(220.dp),
-//        colors = CardDefaults.cardColors(containerColor = darkBackground)
-//    ) {
-//        LineChart(
-//            linesChartData = listOf(
-//                LineChartData(
-//                    points = listOf(
-//                        LineChartData.Point(40f, "Mon"),
-//                        LineChartData.Point(30f, "Tue"),
-//                        LineChartData.Point(50f, "Wed"),
-//                        LineChartData.Point(70f, "Thu"),
-//                        LineChartData.Point(110f, "Fri"),
-//                        LineChartData.Point(100f, "Sat"),
-//                        LineChartData.Point(20f, "Sun")
-//                    ),
-//                    lineDrawer = SolidLineDrawer(color = accentGreen, thickness = 3.dp),
-//                )
-//            ), pointDrawer = NoPointDrawer, xAxisDrawer = SimpleXAxisDrawer(
-//                axisLineColor = Color.White,
-//                axisLineThickness = 1.dp,
-//                labelTextColor = Color.White,
-//                labelTextSize = 12.sp,
-//            ), yAxisDrawer = SimpleYAxisDrawer(
-//                axisLineColor = Color.White,
-//                axisLineThickness = 1.dp,
-//                labelTextColor = Color.White,
-//                labelTextSize = 12.sp,
-//            ), modifier = Modifier
-//                .fillMaxWidth()
-//                .height(200.dp)
-//                .padding(30.dp)
-//        )
-//    }
-//}
