@@ -31,7 +31,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.debttracker.ui.screens.*
-import com.example.debttracker.ui.theme.LimeGreen
+import com.example.debttracker.ui.theme.AccentPrimary
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     object Home : Screen("home", "Home", Icons.Filled.Home)
@@ -87,7 +87,9 @@ fun CustomBottomNavBar(navController: NavHostController, currentRoute: String?) 
                 selected = currentRoute == screen.route,
                 onClick = {
                     navController.navigate(screen.route) {
-                        popUpTo(navController.graph.startDestinationRoute ?: Screen.Home.route) { saveState = true }
+                        popUpTo(
+                            navController.graph.startDestinationRoute ?: Screen.Home.route
+                        ) { saveState = true }
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -99,7 +101,7 @@ fun CustomBottomNavBar(navController: NavHostController, currentRoute: String?) 
                                 .size(56.dp)
                                 //.offset(y = (-20).dp)
                                 .clip(CircleShape)
-                                .background(LimeGreen),
+                                .background(AccentPrimary),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(

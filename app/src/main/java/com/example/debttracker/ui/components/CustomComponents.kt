@@ -520,6 +520,24 @@ fun CustomBottomSheetScaffold(
         },
         sheetContainerColor = AccentPrimary,
         sheetPeekHeight = (LocalConfiguration.current.screenHeightDp * 0.4).dp,
+        sheetDragHandle = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(48.dp)
+                        .height(5.dp)
+                        .background(
+                            color = Color.White,
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                )
+            }
+        }
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
