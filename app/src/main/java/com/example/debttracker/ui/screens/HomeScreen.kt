@@ -41,8 +41,7 @@ fun HomeScreen(navController: NavHostController) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp),
+                    .padding(innerPadding),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 CustomBottomSheetScaffold(
