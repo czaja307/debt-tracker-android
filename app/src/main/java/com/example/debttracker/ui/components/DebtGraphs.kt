@@ -1,18 +1,26 @@
 package com.example.debttracker.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.tehras.charts.piechart.PieChart
@@ -115,34 +123,98 @@ fun DebtOverTimeGraph() {
     }
 }
 
-// TODO: Replace with real data passed via ViewModel and constructor
-private val dataPieChart = listOf(
-    PieChartData.Slice(value = 40f, color = Color(0xFF3B4C00)),
-    PieChartData.Slice(value = 30f, color = Color(0xFFB4DD1E)),
-)
-
 @Composable
-fun DebtWheelGraph() {
+fun DebtPieChart(
+    data: Map<String, PieChartData.Slice>, title: String
+) {
+    val totalValue = data.values.sumOf { it.value.toInt() }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
     ) {
-        Column(modifier = Modifier.background(Color(0xFF1C1C1C))) {
+        Column(
+            modifier = Modifier.background(Color(0xFF1C1C1C))
+        ) {
             Text(
-                text = "Current debt",
+                text = title,
                 fontSize = 20.sp,
                 color = Color(0xFFE3E3E3),
                 modifier = Modifier.padding(top = 24.dp, start = 24.dp)
             )
+
+            // Chart with weight
             Box(
                 modifier = Modifier
                     .background(Color(0xFF1C1C1C))
-                    .padding(24.dp)
+                    .padding(top = 8.dp)
+                    .weight(1f, fill = false) // Add weight but don't force filling
             ) {
                 PieChart(
-                    pieChartData = PieChartData(slices = dataPieChart),
+                    pieChartData = PieChartData(slices = data.values.toList()),
                     sliceDrawer = SimpleSliceDrawer(100f),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp) // Set a reasonable height
+                )
+            }
+
+            // Legend with fixed content size
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 8.dp)
+                    .wrapContentHeight(), // Ensure it takes only needed height
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                data.forEach { (label, slice) ->
+                    val percentage = (slice.value / totalValue * 100).toInt()
+                    LegendItem(
+                        color = slice.color,
+                        label = label,
+                        value = "$${slice.value.toInt()}",
+                        percentage = "$percentage%",
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LegendItem(
+    color: Color, label: String, value: String, percentage: String, modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier, verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Color indicator
+        Box(
+            modifier = Modifier
+                .size(12.dp)
+                .background(color = color, shape = RoundedCornerShape(2.dp))
+        )
+
+        // Label and values
+        Column(
+            modifier = Modifier.padding(start = 8.dp)
+        ) {
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                color = Color(0xFFE3E3E3),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "$value — $percentage", fontSize = 12.sp, color = Color(0xFFAAAAAA)
                 )
             }
         }

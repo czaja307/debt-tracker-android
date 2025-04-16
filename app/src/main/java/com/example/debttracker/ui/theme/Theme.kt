@@ -1,7 +1,6 @@
 package com.example.debttracker.ui.theme
 
 import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -13,9 +12,9 @@ import androidx.compose.ui.platform.LocalContext
 
 // tryb ciemny
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80,
+    primary = AccentPrimary,
+    secondary = AccentSecondary,
+    tertiary = AccentTertiary,
     background = AppBackgroundColor,
     surface = AppBackgroundColor,
     onBackground = Color.White,
@@ -24,9 +23,9 @@ private val DarkColorScheme = darkColorScheme(
 
 //tryb jasny
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40,
+    primary = AccentPrimary,
+    secondary = AccentSecondary,
+    tertiary = AccentTertiary,
     background = Color(0xFFFFFBFE),
     surface = Color(0xFFFFFBFE),
     onPrimary = Color.White,
@@ -48,6 +47,7 @@ fun DebtTrackerTheme(
             if (darkTheme) dynamicDarkColorScheme(context)
             else dynamicLightColorScheme(context)
         }
+
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
