@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -59,7 +60,8 @@ import com.example.debttracker.R
 import com.example.debttracker.ui.screens.User
 import com.example.debttracker.ui.theme.AccentPrimary
 import com.example.debttracker.ui.theme.BottomNavBarColor
-import com.example.debttracker.ui.theme.ComponentCornerRadius
+import com.example.debttracker.ui.theme.ComponentCornerRadiusBig
+import com.example.debttracker.ui.theme.ComponentCornerRadiusSmall
 import com.example.debttracker.ui.theme.GlobalTopBarColor
 import kotlin.math.abs
 
@@ -68,7 +70,7 @@ import kotlin.math.abs
 fun TransactionField(date: String, amount: String, modifier: Modifier = Modifier) {
     Surface(
         color = Color.DarkGray,
-        shape = RoundedCornerShape(ComponentCornerRadius),
+        shape = RoundedCornerShape(ComponentCornerRadiusSmall),
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(5f)
@@ -98,13 +100,9 @@ fun FriendField(
     else
         painterResource(id = R.drawable.placeholder)
 
-    val formattedBalance = String.format("%.2f", abs(friend.balance))
-    val balanceText = if (friend.balance >= 0) "+$$formattedBalance" else "-$$formattedBalance"
-    val balanceColor = if (friend.balance >= 0f) Color.Green else Color.Red
-
     Surface(
         color = Color.DarkGray,
-        shape = RoundedCornerShape(ComponentCornerRadius),
+        shape = RoundedCornerShape(ComponentCornerRadiusSmall),
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(3.5f)
@@ -122,7 +120,7 @@ fun FriendField(
                 contentDescription = "Friend image",
                 modifier = Modifier
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(ComponentCornerRadius))
+                    .clip(RoundedCornerShape(ComponentCornerRadiusSmall))
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(
@@ -132,21 +130,16 @@ fun FriendField(
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.Start
             ) {
-                Text(
+                CustomText(
                     text = friend.name,
-                    color = Color.White,
                     fontSize = 16.sp
                 )
-                Text(
-                    text = balanceText,
-                    color = balanceColor,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                ColorBalanceText(balance = friend.balance)
             }
         }
     }
 }
+
 
 // c) FriendInvitationField – kafelek z zaproszeniem do znajomych
 @Composable
@@ -165,7 +158,7 @@ fun FriendInvitationField(
 
     Surface(
         color = Color.DarkGray,
-        shape = RoundedCornerShape(ComponentCornerRadius),
+        shape = RoundedCornerShape(ComponentCornerRadiusSmall),
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(2.25f)
@@ -181,7 +174,7 @@ fun FriendInvitationField(
                 contentDescription = "Invitation image",
                 modifier = Modifier
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(ComponentCornerRadius))
+                    .clip(RoundedCornerShape(ComponentCornerRadiusSmall))
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(
@@ -247,6 +240,10 @@ fun CustomButton(
     icon: ImageVector? = null,
     text: String,
     onClick: () -> Unit,
+    fontSize: TextUnit = 24.sp,
+    aspectRatio: Float = 5f,
+    buttonWidth: Float = 0f,
+    buttonShape: Shape = RoundedCornerShape(ComponentCornerRadiusBig),
     modifier: Modifier = Modifier
 ) {
     val backgroundColor = when (variant) {
@@ -254,29 +251,40 @@ fun CustomButton(
         ButtonVariant.GREY -> Color.DarkGray
     }
     val textColor = when (variant) {
-        ButtonVariant.LIME -> Color.White
-        ButtonVariant.GREY -> Color.LightGray
+        ButtonVariant.LIME -> Color.Black
+        ButtonVariant.GREY -> Color.White
     }
 
     Surface(
         color = backgroundColor,
-        shape = RoundedCornerShape(ComponentCornerRadius),
+        shape = buttonShape,
         modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(5f)
+            .then(
+                if (buttonWidth == 0f) Modifier.fillMaxWidth() else Modifier.width(buttonWidth.dp)
+            )
+            .aspectRatio(aspectRatio)
             .clickable { onClick() }
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
             if (icon != null) {
-                Icon(imageVector = icon, contentDescription = text, tint = textColor)
-                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    imageVector = icon,
+                    contentDescription = text,
+                    tint = textColor,
+                    modifier = Modifier.size(40.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
             }
-            Text(text = text, color = textColor)
+            CustomText(
+                text = text,
+                fontSize = fontSize,
+                color = textColor
+            )
         }
     }
 }
@@ -311,7 +319,7 @@ fun CustomTextField(
                 disabledTextColor = Color.Gray,
                 disabledLabelColor = Color.Gray
             ),
-            shape = RoundedCornerShape(ComponentCornerRadius)
+            shape = RoundedCornerShape(ComponentCornerRadiusSmall)
         )
     }
 }
@@ -382,7 +390,7 @@ fun BalanceField(label: String, balance: Float, modifier: Modifier = Modifier) {
     val balanceColor = Color.White
     Surface(
         color = Color.DarkGray,
-        shape = RoundedCornerShape(ComponentCornerRadius),
+        shape = RoundedCornerShape(ComponentCornerRadiusSmall),
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(5f)
@@ -404,13 +412,16 @@ fun BalanceField(label: String, balance: Float, modifier: Modifier = Modifier) {
 @Composable
 fun CustomText(
     text: String,
-    fontSize: TextUnit,
+    fontSize: TextUnit = 16.sp,
+    fontWeight: FontWeight = FontWeight.Normal,
+    color: Color = Color.White,
     modifier: Modifier = Modifier
 ) {
     Text(
         text = text,
         fontSize = fontSize,
-        color = Color.White,
+        fontWeight = fontWeight,
+        color = color,
         modifier = modifier
     )
 }
@@ -454,7 +465,7 @@ fun CustomNumberField(
                 disabledTextColor = Color.Gray,
                 disabledLabelColor = Color.Gray
             ),
-            shape = RoundedCornerShape(ComponentCornerRadius)
+            shape = RoundedCornerShape(ComponentCornerRadiusSmall)
         )
     }
 }
@@ -462,16 +473,20 @@ fun CustomNumberField(
 // j) CustomUserAvatar - kafelek z awatarem użytkownika
 @Composable
 fun CustomUserAvatar(
-    image: ImageBitmap?,
-    editable: Boolean,
-    onEditClick: () -> Unit,
+    image: ImageBitmap? = null,
+    imageRes: Int? = null,
+    editable: Boolean = false,
+    onEditClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
         Image(
             painter = if (image != null) {
                 BitmapPainter(image)
-            } else {
+            } else if (imageRes != null) {
+                painterResource(id = imageRes)
+            }
+            else {
                 painterResource(id = R.drawable.profile_pic)
             },
             contentDescription = "User Avatar",
@@ -504,16 +519,18 @@ fun CustomUserAvatar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomBottomSheetScaffold(
-    sheetContent: @Composable () -> Unit,
-    content: @Composable () -> Unit
+    topBar: @Composable (() -> Unit)? = null,
+    content: @Composable () -> Unit,
+    sheetContent: @Composable () -> Unit
 ) {
     BottomSheetScaffold(
+        topBar = topBar,
         sheetContent = {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(3000.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.TopCenter
             ) {
                 sheetContent()
             }
@@ -540,10 +557,27 @@ fun CustomBottomSheetScaffold(
         }
     ) {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize(),
             contentAlignment = Alignment.TopCenter
         ) {
             content()
         }
     }
+}
+
+
+// l) ColorBalanceText - tekst z kolorem zależnym od wartości
+@Composable
+fun ColorBalanceText(balance: Float, fontSize: TextUnit = 32.sp) {
+    val formattedBalance = String.format("%.2f", kotlin.math.abs(balance))
+    val balanceText = if (balance >= 0) "+$$formattedBalance" else "-$$formattedBalance"
+    val balanceColor = if (balance >= 0f) Color.Green else Color.Red
+
+    CustomText(
+        text = balanceText,
+        fontSize = fontSize,
+        fontWeight = FontWeight.Bold,
+        color = balanceColor
+    )
 }

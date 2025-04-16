@@ -128,56 +128,62 @@ fun DebtOverTimeGraph() {
 fun DebtPieChart(
     data: Map<String, PieChartData.Slice>, title: String
 ) {
-    val totalValue = data.values.sumOf { it.value.toInt() }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+    Box(
+        modifier = Modifier
+            .height(220.dp)
+            .fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier.background(Color(0xFF1C1C1C))
-        ) {
-            Text(
-                text = title,
-                fontSize = 20.sp,
-                color = Color(0xFFE3E3E3),
-                modifier = Modifier.padding(top = 24.dp, start = 24.dp)
-            )
+        val totalValue = data.values.sumOf { it.value.toInt() }
 
-            // Chart with weight
-            Box(
-                modifier = Modifier
-                    .background(Color(0xFF1C1C1C))
-                    .padding(top = 8.dp)
-                    .weight(1f, fill = false) // Add weight but don't force filling
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            Column(
+                modifier = Modifier.background(Color(0xFF1C1C1C))
             ) {
-                PieChart(
-                    pieChartData = PieChartData(slices = data.values.toList()),
-                    sliceDrawer = SimpleSliceDrawer(100f),
+                Text(
+                    text = title,
+                    fontSize = 20.sp,
+                    color = Color(0xFFE3E3E3),
+                    modifier = Modifier.padding(top = 24.dp, start = 24.dp)
+                )
+
+                // Chart with weight
+                Box(
+                    modifier = Modifier
+                        .background(Color(0xFF1C1C1C))
+                        .padding(top = 8.dp)
+                        .weight(1f, fill = false) // Add weight but don't force filling
+                ) {
+                    PieChart(
+                        pieChartData = PieChartData(slices = data.values.toList()),
+                        sliceDrawer = SimpleSliceDrawer(100f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp) // Set a reasonable height
+                    )
+                }
+
+                // Legend with fixed content size
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp) // Set a reasonable height
-                )
-            }
-
-            // Legend with fixed content size
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 8.dp)
-                    .wrapContentHeight(), // Ensure it takes only needed height
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                data.forEach { (label, slice) ->
-                    val percentage = (slice.value / totalValue * 100).toInt()
-                    LegendItem(
-                        color = slice.color,
-                        label = label,
-                        value = "$${slice.value.toInt()}",
-                        percentage = "$percentage%",
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    )
+                        .padding(horizontal = 24.dp, vertical = 8.dp)
+                        .wrapContentHeight(), // Ensure it takes only needed height
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    data.forEach { (label, slice) ->
+                        val percentage = (slice.value / totalValue * 100).toInt()
+                        LegendItem(
+                            color = slice.color,
+                            label = label,
+                            value = "$${slice.value.toInt()}",
+                            percentage = "$percentage%",
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                    }
                 }
             }
         }

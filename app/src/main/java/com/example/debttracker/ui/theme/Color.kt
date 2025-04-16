@@ -11,4 +11,5 @@ val AccentPrimary = Color(0xFFB4DD1E)
 val AccentSecondary = Color(0xFFA8C931)
 val AccentTertiary = Color(0xFF3B4C00)
 
-val ComponentCornerRadius = 16.dp
+val ComponentCornerRadiusSmall = 16.dp
+val ComponentCornerRadiusBig = 50.dp
