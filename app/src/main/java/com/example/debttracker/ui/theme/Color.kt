@@ -17,4 +17,5 @@ val BottomNavBarColor = Color(0xFF1E1E1E)       // dolny panel nawigacyjny – c
 
 val LimeGreen = Color(0xFFA8C931)
 
-val ComponentCornerRadius = 16.dp
+val ComponentCornerRadiusSmall = 16.dp
+val ComponentCornerRadiusBig = 50.dp

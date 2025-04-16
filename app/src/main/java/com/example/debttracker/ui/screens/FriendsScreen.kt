@@ -69,6 +69,7 @@ fun FriendsScreen(
                     CustomButton(
                         text = "Add Friend",
                         onClick = { navController.navigate("add_friend") },
+                        aspectRatio = 4f,
                         modifier = Modifier.weight(1f)
                     )
 
@@ -77,6 +78,7 @@ fun FriendsScreen(
                     CustomButton(
                         text = "Invitations",
                         onClick = { navController.navigate("invitations") },
+                        aspectRatio = 4f,
                         modifier = Modifier.weight(1f)
                     )
                 }
