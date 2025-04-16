@@ -351,6 +351,7 @@ fun CustomEnumPickField(
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
             },
             modifier = Modifier
+                .menuAnchor()
                 .fillMaxWidth(),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = dropdownBackground,
