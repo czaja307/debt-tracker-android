@@ -32,6 +32,7 @@ import com.example.debttracker.ui.components.CustomButton
 import com.example.debttracker.ui.components.CustomText
 import com.example.debttracker.ui.components.FriendField
 import com.example.debttracker.ui.components.GlobalTopAppBar
+import com.example.debttracker.R
 
 // temporary, kiedyś sobie zamienie na models.User,
 // ale nie wiem czy ta klasa nie ulegnie jeszcze zmienom różnym
@@ -42,15 +43,18 @@ data class User(
     val imageRes: Int? = null
 )
 
+//public static example user list
+val exampleUserList = listOf(
+    User(id = "1", name = "John Doe", balance = 25.0f, imageRes = null),
+    User(id = "2", name = "Jane Doe", balance = -15.5f, imageRes = R.drawable.profile_pic),
+    User(id = "3", name = "Alice Smith", balance = 12.3f, imageRes = R.drawable.sheldon),
+    User(id = "4", name = "Bob Johnson", balance = 55.0f, imageRes = R.drawable.app_logo)
+)
+
 @Composable
 fun FriendsScreen(
     navController: NavHostController,
-    friendList: List<User> = listOf(
-        User(id = "1", name = "John Doe", balance = 25.0f),
-        User(id = "2", name = "Jane Doe", balance = -15.5f),
-        User(id = "3", name = "Alice Smith", balance = 12.3f),
-        User(id = "4", name = "Bob Johnson", balance = 55.0f)
-    )
+    friendList: List<User> = exampleUserList
 ) {
     Scaffold(
         topBar = { GlobalTopAppBar(navController) },

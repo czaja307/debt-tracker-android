@@ -35,51 +35,57 @@ import com.github.tehras.charts.piechart.PieChartData
 fun HomeScreen(navController: NavHostController) {
     val scrollState = rememberScrollState()
 
-    Scaffold(
+    CustomBottomSheetScaffold(
         topBar = { GlobalTopAppBar(navController) },
-        content = { innerPadding ->
-            CustomBottomSheetScaffold(
-                content = {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                            .padding(horizontal = 16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Top
-                    ) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        CustomText(
-                            text = "You owe",
-                            fontSize = 24.sp
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        CustomText(
-                            text = "$12.44",
-                            fontSize = 64.sp
-                        )
-                    }
-                },
-                sheetContent = {
-                    var textValue by remember { mutableStateOf("") }
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        BalanceField("People owe you", balance = 123.45f)
-                        DebtOverTimeGraph()
-                        DebtWheelGraph()
-                        BalanceField("My total debt", balance = 123.45f)
-                        BalanceField("Total debt to me", balance = 123.45f)
-                        //TransactionField(date = "2025-04-08", amount = "$50.00")
-                        //CustomButton(icon = Icons.Filled.Info, text = "Test Button")
-                        //CustomTextField(label = "Description", text = textValue, onTextChange = { textValue = it })
-                    }
-                },
+        content = {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
+            ) {
+                Spacer(modifier = Modifier.height(16.dp))
+                CustomText(
+                    text = "You owe",
+                    fontSize = 24.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                CustomText(
+                    text = "$12.44",
+                    fontSize = 64.sp
+                )
+            }
+        },
+        sheetContent = {
+            var textValue by remember { mutableStateOf("") }
+            val dataPieChart = mapOf(
+                "To me" to PieChartData.Slice(
+                    value = 40f,
+                    color = Color(0xFF3B4C00)
+                ),
+                "My" to PieChartData.Slice(
+                    value = 30f,
+                    color = Color(0xFFB4DD1E)
+                ),
             )
-        }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .verticalScroll(scrollState),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                BalanceField("People owe you", balance = 123.45f)
+                DebtOverTimeGraph()
+                DebtPieChart(dataPieChart, "Current debt")
+                BalanceField("My total debt", balance = 123.45f)
+                BalanceField("Total debt to me", balance = 123.45f)
+                //TransactionField(date = "2025-04-08", amount = "$50.00")
+                //CustomButton(icon = Icons.Filled.Info, text = "Test Button")
+                //CustomTextField(label = "Description", text = textValue, onTextChange = { textValue = it })
+            }
+        },
     )
 }
 

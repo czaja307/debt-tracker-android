@@ -473,7 +473,8 @@ fun CustomNumberField(
 // j) CustomUserAvatar - kafelek z awatarem użytkownika
 @Composable
 fun CustomUserAvatar(
-    image: ImageBitmap?,
+    image: ImageBitmap? = null,
+    imageRes: Int? = null,
     editable: Boolean = false,
     onEditClick: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -482,7 +483,10 @@ fun CustomUserAvatar(
         Image(
             painter = if (image != null) {
                 BitmapPainter(image)
-            } else {
+            } else if (imageRes != null) {
+                painterResource(id = imageRes)
+            }
+            else {
                 painterResource(id = R.drawable.profile_pic)
             },
             contentDescription = "User Avatar",
@@ -515,10 +519,12 @@ fun CustomUserAvatar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomBottomSheetScaffold(
+    topBar: @Composable (() -> Unit)? = null,
     content: @Composable () -> Unit,
     sheetContent: @Composable () -> Unit
 ) {
     BottomSheetScaffold(
+        topBar = topBar,
         sheetContent = {
             Box(
                 modifier = Modifier
@@ -529,7 +535,7 @@ fun CustomBottomSheetScaffold(
                 sheetContent()
             }
         },
-        sheetContainerColor = LimeGreen,
+        sheetContainerColor = AccentPrimary,
         sheetPeekHeight = (LocalConfiguration.current.screenHeightDp * 0.4).dp,
         sheetDragHandle = {
             Box(
