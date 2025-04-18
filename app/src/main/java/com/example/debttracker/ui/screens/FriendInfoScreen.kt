@@ -1,5 +1,6 @@
 package com.example.debttracker.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import com.example.debttracker.ui.components.CustomButton
 import com.example.debttracker.ui.components.CustomText
 import com.example.debttracker.ui.components.CustomUserAvatar
 import com.example.debttracker.ui.components.TransactionField
+import com.example.debttracker.ui.theme.AppBackgroundColor
 
 @Composable
 fun FriendInfoScreen(navController: NavHostController, friendId: String) {
@@ -43,7 +45,8 @@ fun FriendInfoScreen(navController: NavHostController, friendId: String) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .background(AppBackgroundColor),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {

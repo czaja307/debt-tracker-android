@@ -1,6 +1,7 @@
 package com.example.debttracker.ui.screens
 
 //import com.example.debttracker.models.User
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import com.example.debttracker.ui.components.CustomButton
 import com.example.debttracker.ui.components.CustomText
 import com.example.debttracker.ui.components.FriendField
 import com.example.debttracker.ui.components.GlobalTopAppBar
+import com.example.debttracker.ui.theme.AppBackgroundColor
 
 // temporary, kiedyś sobie zamienie na models.User,
 // ale nie wiem czy ta klasa nie ulegnie jeszcze zmienom różnym
@@ -46,6 +48,7 @@ fun FriendsScreen(
     friendList: List<User> = exampleUserList
 ) {
     Scaffold(
+        modifier = Modifier.background(AppBackgroundColor),
         topBar = { GlobalTopAppBar(navController) },
         content = { innerPadding ->
             Column(

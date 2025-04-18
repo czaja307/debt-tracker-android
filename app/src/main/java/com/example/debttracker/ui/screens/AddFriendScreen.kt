@@ -1,5 +1,6 @@
 package com.example.debttracker.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,7 @@ fun AddFriendScreen(navController: NavHostController) {
     var username by remember { mutableStateOf("") }
 
     Scaffold(
+        modifier = Modifier.background(AppBackgroundColor),
         containerColor = AppBackgroundColor,
         topBar = { BackTopAppBar("Add Friend", navController) }
     ) { innerPadding ->

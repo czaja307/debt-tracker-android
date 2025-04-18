@@ -60,6 +60,7 @@ import androidx.navigation.NavHostController
 import com.example.debttracker.R
 import com.example.debttracker.ui.screens.User
 import com.example.debttracker.ui.theme.AccentPrimary
+import com.example.debttracker.ui.theme.AppBackgroundColor
 import com.example.debttracker.ui.theme.ComponentCornerRadiusBig
 import com.example.debttracker.ui.theme.ComponentCornerRadiusSmall
 import com.example.debttracker.ui.theme.TextPrimary
@@ -560,7 +561,8 @@ fun CustomBottomSheetScaffold(
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .background(AppBackgroundColor),
             contentAlignment = Alignment.TopCenter
         ) {
             content()

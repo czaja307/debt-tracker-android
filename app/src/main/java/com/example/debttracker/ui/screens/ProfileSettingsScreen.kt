@@ -4,6 +4,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,7 @@ import com.example.debttracker.ui.components.CustomEnumPickField
 import com.example.debttracker.ui.components.CustomText
 import com.example.debttracker.ui.components.CustomTextField
 import com.example.debttracker.ui.components.CustomUserAvatar
+import com.example.debttracker.ui.theme.AppBackgroundColor
 import java.io.InputStream
 
 @Composable
@@ -144,6 +146,7 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
 
     Scaffold(
+        modifier = Modifier.background(AppBackgroundColor),
         topBar = {
             BackTopAppBar(title = "Login", navController = navController)
         },
@@ -215,6 +218,7 @@ fun SignInScreen(
     var password by remember { mutableStateOf("") }
 
     Scaffold(
+        modifier = Modifier.background(AppBackgroundColor),
         topBar = {
             BackTopAppBar(title = "Sign In", navController = navController)
         },

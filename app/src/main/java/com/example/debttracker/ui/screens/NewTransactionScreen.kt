@@ -1,5 +1,6 @@
 package com.example.debttracker.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +22,7 @@ import com.example.debttracker.ui.components.ButtonVariant
 import com.example.debttracker.ui.components.CustomButton
 import com.example.debttracker.ui.components.CustomEnumPickField
 import com.example.debttracker.ui.components.CustomNumberField
+import com.example.debttracker.ui.theme.AppBackgroundColor
 
 @Composable
 fun NewTransactionScreen(navController: NavHostController) {
@@ -30,6 +32,7 @@ fun NewTransactionScreen(navController: NavHostController) {
     var debtor by remember { mutableStateOf("") }
 
     Scaffold(
+        modifier = Modifier.background(AppBackgroundColor),
         topBar = { BackTopAppBar("Add a new transaction", navController) },
         content = { innerPadding ->
             Column(
