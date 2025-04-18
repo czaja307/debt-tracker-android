@@ -32,6 +32,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.debttracker.ui.screens.*
 import com.example.debttracker.ui.theme.AccentPrimary
+import com.example.debttracker.ui.theme.BottomNavBarColor
+import com.example.debttracker.ui.theme.TextPrimary
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     object Home : Screen("home", "Home", Icons.Filled.Home)
@@ -80,7 +82,7 @@ fun NavGraph() {
 @Composable
 fun CustomBottomNavBar(navController: NavHostController, currentRoute: String?) {
     NavigationBar(
-        containerColor = Color.Black.copy(alpha = 0.5f)
+        containerColor = BottomNavBarColor
     ) {
         listOf(Screen.Home, Screen.NewTransaction, Screen.Friends).forEach { screen ->
             NavigationBarItem(
@@ -115,14 +117,14 @@ fun CustomBottomNavBar(navController: NavHostController, currentRoute: String?) 
                         Icon(
                             imageVector = screen.icon,
                             contentDescription = screen.title,
-                            tint = Color.White,
+                            tint = TextPrimary,
                             modifier = Modifier.size(30.dp)
                         )
                     }
                 },
                 label = {
                     if (screen.route != Screen.NewTransaction.route) {
-                        Text(text = screen.title, color = Color.White, fontSize = 12.sp)
+                        Text(text = screen.title, color = TextPrimary, fontSize = 12.sp)
                     }
                 }
             )
