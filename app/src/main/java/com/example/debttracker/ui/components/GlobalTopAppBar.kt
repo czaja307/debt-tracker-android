@@ -18,7 +18,6 @@ import com.example.debttracker.ui.theme.GlobalTopBarColor
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GlobalTopAppBar(navController: NavHostController) {
-    val topAppBarColor = GlobalTopBarColor
     TopAppBar(
         title = {
             Image(
@@ -36,6 +35,6 @@ fun GlobalTopAppBar(navController: NavHostController) {
                 )
             }
         },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = topAppBarColor)
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = GlobalTopBarColor)
     )
 }

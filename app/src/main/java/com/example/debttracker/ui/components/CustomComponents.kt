@@ -30,6 +30,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MenuAnchorType.Companion.PrimaryNotEditable
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -59,17 +60,17 @@ import androidx.navigation.NavHostController
 import com.example.debttracker.R
 import com.example.debttracker.ui.screens.User
 import com.example.debttracker.ui.theme.AccentPrimary
-import com.example.debttracker.ui.theme.BottomNavBarColor
 import com.example.debttracker.ui.theme.ComponentCornerRadiusBig
 import com.example.debttracker.ui.theme.ComponentCornerRadiusSmall
-import com.example.debttracker.ui.theme.GlobalTopBarColor
+import com.example.debttracker.ui.theme.TextPrimary
+import com.example.debttracker.ui.theme.TilePrimary
 import kotlin.math.abs
 
 // a) TransactionField – kafelek z datą i kwotą transakcji
 @Composable
 fun TransactionField(date: String, amount: String, modifier: Modifier = Modifier) {
     Surface(
-        color = Color.DarkGray,
+        color = TilePrimary,
         shape = RoundedCornerShape(ComponentCornerRadiusSmall),
         modifier = modifier
             .fillMaxWidth()
@@ -82,8 +83,8 @@ fun TransactionField(date: String, amount: String, modifier: Modifier = Modifier
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = date, color = Color.White)
-            Text(text = amount, color = Color.White)
+            Text(text = date, color = TextPrimary)
+            Text(text = amount, color = TextPrimary)
         }
     }
 }
@@ -101,7 +102,7 @@ fun FriendField(
         painterResource(id = R.drawable.placeholder)
 
     Surface(
-        color = Color.DarkGray,
+        color = TilePrimary,
         shape = RoundedCornerShape(ComponentCornerRadiusSmall),
         modifier = modifier
             .fillMaxWidth()
@@ -157,7 +158,7 @@ fun FriendInvitationField(
         painterResource(id = R.drawable.placeholder)
 
     Surface(
-        color = Color.DarkGray,
+        color = TilePrimary,
         shape = RoundedCornerShape(ComponentCornerRadiusSmall),
         modifier = modifier
             .fillMaxWidth()
@@ -187,12 +188,12 @@ fun FriendInvitationField(
                 Column {
                     Text(
                         text = friendName,
-                        color = Color.White,
+                        color = TextPrimary,
                         fontSize = 20.sp
                     )
                     Text(
                         text = username,
-                        color = Color.White,
+                        color = TextPrimary,
                         fontSize = 16.sp
                     )
                 }
@@ -208,7 +209,7 @@ fun FriendInvitationField(
                         Icon(
                             imageVector = Icons.Filled.Check,
                             contentDescription = "Accept",
-                            tint = Color.White,
+                            tint = TextPrimary,
                             modifier = Modifier.size(48.dp)
                         )
                     }
@@ -219,7 +220,7 @@ fun FriendInvitationField(
                         Icon(
                             imageVector = Icons.Filled.Close,
                             contentDescription = "Reject",
-                            tint = Color.White,
+                            tint = TextPrimary,
                             modifier = Modifier.size(48.dp)
                         )
                     }
@@ -299,14 +300,14 @@ fun CustomTextField(
     placeholder: String,
     modifier: Modifier = Modifier
 ) {
-    val textFieldBackground = BottomNavBarColor
+    val textFieldBackground = TilePrimary
     Column(modifier = modifier.fillMaxWidth()) {
         Text(text = label, color = Color.White)
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            placeholder = { Text(text = placeholder, color = Color.White.copy(alpha = 0.7f)) },
+            placeholder = { Text(text = placeholder, color = TextPrimary.copy(alpha = 0.7f)) },
             modifier = Modifier.fillMaxWidth(),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = textFieldBackground,
@@ -335,23 +336,24 @@ fun CustomEnumPickField(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val dropdownBackground = GlobalTopBarColor
+    val dropdownBackground = TilePrimary
 
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth(),
     ) {
         OutlinedTextField(
             readOnly = true,
             value = selectedOption,
             onValueChange = {},
-            label = { Text(label, color = Color.White) },
+            label = { Text(label, color = TextPrimary) },
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
             },
             modifier = Modifier
-                .menuAnchor()
+                .menuAnchor(PrimaryNotEditable)
                 .fillMaxWidth(),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = dropdownBackground,
@@ -363,7 +365,8 @@ fun CustomEnumPickField(
                 unfocusedLabelColor = Color.White,
                 disabledTextColor = Color.Gray,
                 disabledLabelColor = Color.Gray,
-            )
+            ),
+            shape = RoundedCornerShape(ComponentCornerRadiusSmall)
         )
         ExposedDropdownMenu(
             expanded = expanded,
@@ -372,7 +375,7 @@ fun CustomEnumPickField(
         ) {
             options.forEach { selectionOption ->
                 DropdownMenuItem(
-                    text = { Text(selectionOption, color = Color.White) },
+                    text = { Text(selectionOption, color = TextPrimary) },
                     onClick = {
                         onOptionSelected(selectionOption)
                         expanded = false
@@ -388,9 +391,9 @@ fun CustomEnumPickField(
 fun BalanceField(label: String, balance: Float, modifier: Modifier = Modifier) {
     //val label = if (balance >= 0) "People owe you:" else "You owe people:"
     //val balanceColor = if (balance >= 0) Color.Green else Color.Red
-    val balanceColor = Color.White
+    val balanceColor = TextPrimary
     Surface(
-        color = Color.DarkGray,
+        color = TilePrimary,
         shape = RoundedCornerShape(ComponentCornerRadiusSmall),
         modifier = modifier
             .fillMaxWidth()
@@ -403,7 +406,7 @@ fun BalanceField(label: String, balance: Float, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = label, color = Color.White)
+            Text(text = label, color = TextPrimary)
             Text(text = balance.toString(), color = balanceColor)
         }
     }
@@ -415,7 +418,7 @@ fun CustomText(
     text: String,
     fontSize: TextUnit = 16.sp,
     fontWeight: FontWeight = FontWeight.Normal,
-    color: Color = Color.White,
+    color: Color = TextPrimary,
     modifier: Modifier = Modifier
 ) {
     Text(
@@ -436,9 +439,9 @@ fun CustomNumberField(
     placeholder: String,
     modifier: Modifier = Modifier
 ) {
-    val textFieldBackground = BottomNavBarColor
+    val textFieldBackground = TilePrimary
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(text = label, color = Color.White)
+        Text(text = label, color = TextPrimary)
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedTextField(
             value = value,
@@ -450,7 +453,7 @@ fun CustomNumberField(
             placeholder = {
                 Text(
                     text = placeholder,
-                    color = Color.White.copy(alpha = 0.7f)
+                    color = TextPrimary.copy(alpha = 0.7f)
                 )
             },
             modifier = Modifier.fillMaxWidth(),
@@ -486,8 +489,7 @@ fun CustomUserAvatar(
                 BitmapPainter(image)
             } else if (imageRes != null) {
                 painterResource(id = imageRes)
-            }
-            else {
+            } else {
                 painterResource(id = R.drawable.profile_pic)
             },
             contentDescription = "User Avatar",
@@ -495,7 +497,7 @@ fun CustomUserAvatar(
             modifier = Modifier
                 .fillMaxSize()
                 .clip(CircleShape)
-                .background(Color.Gray)
+                .background(Color.Red)
         )
         if (editable) {
             IconButton(
@@ -503,12 +505,12 @@ fun CustomUserAvatar(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .size(32.dp)
-                    .background(color = Color.White, shape = CircleShape)
+                    .background(color = Color.Blue, shape = CircleShape)
             ) {
                 Icon(
                     imageVector = Icons.Default.Edit,
                     contentDescription = "Edit Avatar",
-                    tint = Color.Black,
+                    tint = Color.Yellow,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -529,8 +531,7 @@ fun CustomBottomSheetScaffold(
         sheetContent = {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3000.dp),
+                    .fillMaxWidth(),
                 contentAlignment = Alignment.TopCenter
             ) {
                 sheetContent()
@@ -571,7 +572,7 @@ fun CustomBottomSheetScaffold(
 // l) ColorBalanceText - tekst z kolorem zależnym od wartości
 @Composable
 fun ColorBalanceText(balance: Float, fontSize: TextUnit = 32.sp) {
-    val formattedBalance = String.format("%.2f", kotlin.math.abs(balance))
+    val formattedBalance = String.format("%.2f", abs(balance))
     val balanceText = if (balance >= 0) "+$$formattedBalance" else "-$$formattedBalance"
     val balanceColor = if (balance >= 0f) Color.Green else Color.Red
 

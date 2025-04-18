@@ -1,38 +1,27 @@
 package com.example.debttracker.ui.screens
 
+//import com.example.debttracker.models.User
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.runtime.*
-import androidx.compose.ui.unit.dp
-import com.example.debttracker.ui.components.FriendField
-import com.example.debttracker.ui.components.FriendInvitationField
-
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import com.example.debttracker.ui.components.FriendField
-
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-//import com.example.debttracker.models.User
+import androidx.navigation.NavHostController
+import com.example.debttracker.R
 import com.example.debttracker.ui.components.CustomButton
 import com.example.debttracker.ui.components.CustomText
 import com.example.debttracker.ui.components.FriendField
 import com.example.debttracker.ui.components.GlobalTopAppBar
-import com.example.debttracker.R
 
 // temporary, kiedyś sobie zamienie na models.User,
 // ale nie wiem czy ta klasa nie ulegnie jeszcze zmienom różnym

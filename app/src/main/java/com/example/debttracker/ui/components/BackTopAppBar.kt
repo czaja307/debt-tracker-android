@@ -3,7 +3,7 @@ package com.example.debttracker.ui.components
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,7 +23,6 @@ import com.example.debttracker.ui.theme.GlobalTopBarColor
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BackTopAppBar(title: String, navController: NavHostController) {
-    val topAppBarColor = GlobalTopBarColor
     TopAppBar(
         title = {
             Text(
@@ -34,7 +33,7 @@ fun BackTopAppBar(title: String, navController: NavHostController) {
         navigationIcon = {
             IconButton(onClick = { navController.navigateUp() }) {
                 Icon(
-                    imageVector = Icons.Filled.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
                     tint = MaterialTheme.colorScheme.onSurface
                 )
