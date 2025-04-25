@@ -24,6 +24,10 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.debttracker.ui.theme.ComponentCornerRadiusBig
+import com.example.debttracker.ui.theme.ComponentCornerRadiusSmall
+import com.example.debttracker.ui.theme.TextSecondary
+import com.example.debttracker.ui.theme.TilePrimary
 import com.github.tehras.charts.piechart.PieChart
 import com.github.tehras.charts.piechart.PieChartData
 import com.github.tehras.charts.piechart.renderer.SimpleSliceDrawer
@@ -104,7 +108,7 @@ fun DebtOverTimeGraph() {
     }
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(ComponentCornerRadiusSmall),
     ) {
         Column(modifier = Modifier.background(Color(0xFF1C1C1C))) {
             Text(
@@ -116,7 +120,7 @@ fun DebtOverTimeGraph() {
             Box(
                 modifier = Modifier
                     .background(Color(0xFF1C1C1C))
-                    .padding(start = 16.dp, end = 24.dp, bottom = 24.dp, top = 16.dp)
+                    .padding(start = 24.dp, end = 30.dp, bottom = 30.dp, top = 20.dp)
             ) {
                 JetpackComposeBasicLineChart(modelProducer)
             }
@@ -137,22 +141,22 @@ fun DebtPieChart(
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(ComponentCornerRadiusSmall),
         ) {
             Column(
-                modifier = Modifier.background(Color(0xFF1C1C1C))
+                modifier = Modifier.background(TilePrimary)
             ) {
                 Text(
                     text = title,
                     fontSize = 20.sp,
-                    color = Color(0xFFE3E3E3),
+                    color = TextSecondary,
                     modifier = Modifier.padding(top = 24.dp, start = 24.dp)
                 )
 
                 // Chart with weight
                 Box(
                     modifier = Modifier
-                        .background(Color(0xFF1C1C1C))
+                        .background(TilePrimary)
                         .padding(top = 8.dp)
                         .weight(1f, fill = false) // Add weight but don't force filling
                 ) {
@@ -211,7 +215,7 @@ private fun LegendItem(
             Text(
                 text = label,
                 fontSize = 14.sp,
-                color = Color(0xFFE3E3E3),
+                color = TextSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
