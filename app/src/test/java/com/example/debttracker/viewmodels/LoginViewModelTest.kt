@@ -27,6 +27,8 @@ import org.mockito.kotlin.verify
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseUser
+import junit.framework.Assert.assertNotNull
+import org.mockito.Mockito.mock
 
 @ExperimentalCoroutinesApi
 class LoginViewModelTest {
@@ -58,10 +60,24 @@ class LoginViewModelTest {
     @Mock
     private lateinit var mockDocumentReference: com.google.firebase.firestore.DocumentReference
 
+    // To capture and invoke AuthStateListener
+    private var authStateListener: FirebaseAuth.AuthStateListener? = null
+
     @Before
     fun setUp() {
         MockitoAnnotations.openMocks(this)
         Dispatchers.setMain(testDispatcher)
+        viewModel = LoginViewModel(mockAuth, mockDb)
+
+        // Capture the AuthStateListener when it's added
+        whenever(mockAuth.addAuthStateListener(any())).then {
+            authStateListener = it.arguments[0] as FirebaseAuth.AuthStateListener
+            null
+        }
+        // Initialize the listener by calling the init block again (or parts of it)
+        // This is a bit of a workaround. A cleaner way would be to have a dedicated method to init listeners
+        // or to make the listener accessible for invocation in tests.
+        // For now, we re-initialize the viewmodel to ensure the listener is set up with mocks.
         viewModel = LoginViewModel(mockAuth, mockDb)
     }
 
@@ -209,6 +225,73 @@ class LoginViewModelTest {
     }
 
     @Test
+    fun signIn_success_fetchesUser() = runTest {
+        // Arrange
+        val email = "test@example.com"
+        val password = "password123"
+        val uid = "testUid"
+        viewModel.email.value = email
+        viewModel.password.value = password
+
+        val firestoreUserData = mapOf(
+            "uid" to uid,
+            "email" to email,
+            "name" to "Test User",
+            "friends" to emptyList<String>(),
+            "incomingRequests" to emptyList<String>(),
+            "outgoingRequests" to emptyList<String>(),
+            "transactions" to emptyMap<String, List<Map<String, Any>>>()
+        )
+        val mockDocumentSnapshot = mock<com.google.firebase.firestore.DocumentSnapshot>()
+
+        whenever(mockAuth.signInWithEmailAndPassword(email, password)).thenReturn(
+            Tasks.forResult(
+                mockAuthResult
+            )
+        )
+        whenever(mockAuthResult.user).thenReturn(mockFirebaseUser)
+        whenever(mockFirebaseUser.uid).thenReturn(uid)
+        whenever(mockFirebaseUser.email).thenReturn(email)
+        whenever(mockAuth.currentUser).thenReturn(mockFirebaseUser)
+
+        // Mock Firestore fetchUser call
+        val firestoreGetTask = mock<com.google.android.gms.tasks.Task<com.google.firebase.firestore.DocumentSnapshot>>()
+        whenever(mockDb.collection("users")).thenReturn(mockCollectionReference)
+        whenever(mockCollectionReference.document(uid)).thenReturn(mockDocumentReference)
+        whenever(mockDocumentReference.get()).thenReturn(firestoreGetTask)
+
+        whenever(mockDocumentSnapshot.data).thenReturn(firestoreUserData)
+        whenever(mockDocumentSnapshot.exists()).thenReturn(true)
+
+        // Configure the mocked firestoreGetTask to handle listeners directly
+        whenever(firestoreGetTask.addOnSuccessListener(any<com.google.android.gms.tasks.OnSuccessListener<in com.google.firebase.firestore.DocumentSnapshot>>())).thenAnswer { invocation ->
+            val listener = invocation.getArgument<com.google.android.gms.tasks.OnSuccessListener<com.google.firebase.firestore.DocumentSnapshot>>(0)
+            listener.onSuccess(mockDocumentSnapshot) // Invoke listener immediately with success
+            firestoreGetTask // Return the task itself
+        }
+        whenever(firestoreGetTask.addOnFailureListener(any<com.google.android.gms.tasks.OnFailureListener>())).thenReturn(firestoreGetTask) // For success case, failure listener is added but not called
+
+        // Act
+        viewModel.signIn() // This will trigger auth.signInWithEmailAndPassword
+        testDispatcher.scheduler.advanceUntilIdle() // Process signIn coroutine
+
+        // Manually trigger the AuthStateListener as Firebase would
+        assertNotNull("AuthStateListener should be captured", authStateListener)
+        // Ensure mockAuth.currentUser is set up before this call
+        whenever(mockAuth.currentUser).thenReturn(mockFirebaseUser) // Repetitive, but ensures it's set if order changes
+        authStateListener!!.onAuthStateChanged(mockAuth) // Pass the mocked auth
+        testDispatcher.scheduler.advanceUntilIdle() // Process listener and fetchUser coroutines
+
+        // Assert
+        assertEquals(false, viewModel.hasError.value)
+        assertEquals(User(uid, email), viewModel.currentUser.value)
+        assertNotNull(viewModel.storedUser.value)
+        assertEquals(uid, viewModel.storedUser.value?.uid)
+        assertEquals("Test User", viewModel.storedUser.value?.name)
+        assertEquals(true, viewModel.isLoggedIn.value)
+    }
+
+    @Test
     fun signIn_failure() = runTest {
         // Arrange
         val email = "test@example.com"
@@ -234,21 +317,29 @@ class LoginViewModelTest {
         // Arrange
         val email = "new@example.com"
         val password = "newpassword"
+        val newUid = "newUid"
         viewModel.email.value = email
         viewModel.password.value = password
 
         whenever(mockAuth.createUserWithEmailAndPassword(email, password))
             .thenReturn(Tasks.forResult(mockAuthResult))
         whenever(mockAuthResult.user).thenReturn(mockFirebaseUser)
-        whenever(mockFirebaseUser.uid).thenReturn("newUid")
+        whenever(mockFirebaseUser.uid).thenReturn(newUid)
         whenever(mockFirebaseUser.email).thenReturn(email)
+        whenever(mockAuth.currentUser).thenReturn(mockFirebaseUser)
 
         // Mock Firestore operations for createUserInFirestore
-        // val mockDocumentReference = mock<com.google.firebase.firestore.DocumentReference>() // Already a class member
-        whenever(mockDb.collection("users")).thenReturn(mockCollectionReference) // Mock collection first
-        whenever(mockCollectionReference.document(any())).thenReturn(mockDocumentReference) // Then mock document on the collection
-        whenever(mockDocumentReference.set(any()))
-            .thenReturn(Tasks.forResult(null)) // Mock successful set
+        val firestoreSetTask = mock<com.google.android.gms.tasks.Task<Void>>()
+        whenever(mockDb.collection("users")).thenReturn(mockCollectionReference)
+        whenever(mockCollectionReference.document(newUid)).thenReturn(mockDocumentReference)
+        whenever(mockDocumentReference.set(any())).thenReturn(firestoreSetTask)
+
+        // Configure the mocked firestoreSetTask to handle listeners directly
+        whenever(firestoreSetTask.addOnFailureListener(any<com.google.android.gms.tasks.OnFailureListener>())).thenAnswer { invocation ->
+            // This listener should not be called in the success path of signUp.
+            // If it were, you'd invoke it: listener.onFailure(Exception("Simulated Firestore Set Error"))
+            firestoreSetTask
+        }
 
         // Act
         viewModel.signUp()
