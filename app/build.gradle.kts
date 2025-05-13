@@ -64,4 +64,6 @@ dependencies {
     implementation("com.github.tehras:charts:0.2.4-alpha")
     implementation(libs.vico.compose)
     implementation(libs.vico.compose.m3)
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.4")
 }

@@ -53,6 +53,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -299,31 +301,38 @@ fun CustomTextField(
     onValueChange: (String) -> Unit,
     label: String,
     placeholder: String,
+    isPassword: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val textFieldBackground = TilePrimary
-    Column(modifier = modifier.fillMaxWidth()) {
-        Text(text = label, color = Color.White)
-        Spacer(modifier = Modifier.height(4.dp))
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            placeholder = { Text(text = placeholder, color = TextPrimary.copy(alpha = 0.7f)) },
-            modifier = Modifier.fillMaxWidth(),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = textFieldBackground,
-                unfocusedContainerColor = textFieldBackground,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                cursorColor = Color.White,
-                focusedLabelColor = Color.White,
-                unfocusedLabelColor = Color.White,
-                disabledTextColor = Color.Gray,
-                disabledLabelColor = Color.Gray
-            ),
-            shape = RoundedCornerShape(ComponentCornerRadiusSmall)
-        )
-    }
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label, color = TextPrimary) },
+        placeholder = {
+            Text(
+                text = placeholder,
+                color = TextPrimary.copy(alpha = 0.7f)
+            )
+        },
+        modifier = modifier.fillMaxWidth(),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = if (isPassword) KeyboardType.Password else KeyboardType.Text
+        ),
+        visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = textFieldBackground,
+            unfocusedContainerColor = textFieldBackground,
+            focusedTextColor = Color.White,
+            unfocusedTextColor = Color.White,
+            cursorColor = Color.White,
+            focusedLabelColor = Color.White,
+            unfocusedLabelColor = Color.White,
+            disabledTextColor = Color.Gray,
+            disabledLabelColor = Color.Gray
+        ),
+        shape = RoundedCornerShape(ComponentCornerRadiusSmall)
+    )
 }
 
 // f) CustomEnumPickField – pole wyboru z rozwijanym menu

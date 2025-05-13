@@ -41,7 +41,7 @@ class LoginViewModel : ViewModel() {
         } else {
             _currentUser.postValue(null)
             _storedUser.postValue(null)
-            isLoggedIn.postValue(null)
+            isLoggedIn.postValue(false)
         }
     }
 

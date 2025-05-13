@@ -36,31 +36,38 @@ import com.example.debttracker.ui.components.CustomText
 import com.example.debttracker.ui.components.CustomTextField
 import com.example.debttracker.ui.components.CustomUserAvatar
 import com.example.debttracker.ui.theme.AppBackgroundColor
+import com.example.debttracker.viewmodels.LoginViewModel
 import java.io.InputStream
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.debttracker.ui.components.BackTopAppBar
+import com.example.debttracker.ui.components.CustomButton
+import com.example.debttracker.ui.components.CustomEnumPickField
+import com.example.debttracker.ui.components.CustomText
+import com.example.debttracker.ui.components.CustomTextField
+import com.example.debttracker.ui.components.CustomUserAvatar
+import com.example.debttracker.ui.theme.AppBackgroundColor
 
-@Composable
-fun ProfileSettingsScreen(navController: NavHostController) {
-    var isLoggedIn by remember { mutableStateOf(false) }
-    var isLoginMode by remember { mutableStateOf(true) }
-
-    if (isLoggedIn) {
-        ProfileContent(navController)
-    } else {
-        if (isLoginMode) {
-            LoginScreen(
-                onSwitchToSignIn = { isLoginMode = false },
-                onLoginSuccess = { isLoggedIn = true },
-                navController = navController
-            )
-        } else {
-            SignInScreen(
-                onSwitchToLogin = { isLoginMode = true },
-                onSignInSuccess = { isLoggedIn = true },
-                navController = navController
-            )
-        }
-    }
-}
 
 @Composable
 fun ProfileContent(navController: NavHostController) {
@@ -137,152 +144,151 @@ fun ProfileContent(navController: NavHostController) {
 }
 
 @Composable
-fun LoginScreen(
-    onSwitchToSignIn: () -> Unit,
-    onLoginSuccess: () -> Unit,
-    navController: NavHostController
-) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+fun LoginScreen(navController: NavHostController, loginViewModel: LoginViewModel) {
+    val email by loginViewModel.email.observeAsState("")
+    val password by loginViewModel.password.observeAsState("")
+    val hasError by loginViewModel.hasError.observeAsState(false)
+    val errorMessage by loginViewModel.errorMessage.observeAsState("")
 
     Scaffold(
         modifier = Modifier.background(AppBackgroundColor),
-        topBar = {
-            BackTopAppBar(title = "Login", navController = navController)
-        },
-        content = { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp)
+        topBar = { BackTopAppBar(title = "Login", navController = navController) }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        CustomText(
-                            text = "Login",
-                            fontSize = 32.sp,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                        CustomTextField(
-                            value = username,
-                            onValueChange = { username = it },
-                            label = "Username",
-                            placeholder = "Enter username"
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        CustomTextField(
-                            value = password,
-                            onValueChange = { password = it },
-                            label = "Password",
-                            placeholder = "Enter password"
-                        )
+                    CustomText(
+                        text = "Login",
+                        fontSize = 32.sp,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    CustomTextField(
+                        value = email,
+                        onValueChange = { loginViewModel.email.value = it },
+                        label = "Email",
+                        placeholder = "Enter email"
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    CustomTextField(
+                        value = password,
+                        onValueChange = { loginViewModel.password.value = it },
+                        label = "Password",
+                        placeholder = "Enter password"
+                    )
+                    if (hasError) {
+                        Spacer(Modifier.height(8.dp))
+                        CustomText(text = errorMessage, color = Color.Red, fontSize = 14.sp)
                     }
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        CustomButton(
-                            variant = ButtonVariant.GREY,
-                            text = "Sign In",
-                            onClick = onSwitchToSignIn
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        CustomButton(
-                            variant = ButtonVariant.LIME,
-                            text = "Log In",
-                            onClick = onLoginSuccess
-                        )
-                    }
+                }
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CustomButton(
+                        variant = ButtonVariant.GREY,
+                        text = "Sign In",
+                        onClick = { loginViewModel.showSignupView.value = true }
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    CustomButton(
+                        variant = ButtonVariant.LIME,
+                        text = "Log In",
+                        onClick = { loginViewModel.signIn() }
+                    )
                 }
             }
         }
-    )
+    }
 }
-
 @Composable
-fun SignInScreen(
-    onSwitchToLogin: () -> Unit,
-    onSignInSuccess: () -> Unit,
-    navController: NavHostController
-) {
+fun SignInScreen(navController: NavHostController, loginViewModel: LoginViewModel) {
     var name by remember { mutableStateOf("") }
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val email by loginViewModel.email.observeAsState("")
+    val password by loginViewModel.password.observeAsState("")
+
+    val hasError by loginViewModel.hasError.observeAsState(false)
+    val errorMessage by loginViewModel.errorMessage.observeAsState("")
 
     Scaffold(
         modifier = Modifier.background(AppBackgroundColor),
-        topBar = {
-            BackTopAppBar(title = "Sign In", navController = navController)
-        },
-        content = { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp)
+        topBar = { BackTopAppBar(title = "Sign In", navController = navController) }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        CustomText(
-                            text = "Sign In",
-                            fontSize = 32.sp,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                        CustomTextField(
-                            value = name,
-                            onValueChange = { name = it },
-                            label = "Name",
-                            placeholder = "Enter name"
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        CustomTextField(
-                            value = username,
-                            onValueChange = { username = it },
-                            label = "Username",
-                            placeholder = "Enter username"
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        CustomTextField(
-                            value = password,
-                            onValueChange = { password = it },
-                            label = "Password",
-                            placeholder = "Enter password"
-                        )
+                    CustomText(
+                        text = "Sign In",
+                        fontSize = 32.sp,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                    CustomTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = "Name",
+                        placeholder = "Enter name"
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    CustomTextField(
+                        value = email,
+                        onValueChange = { loginViewModel.email.value = it },
+                        label = "Email",
+                        placeholder = "Enter email"
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    CustomTextField(
+                        value = password,
+                        onValueChange = { loginViewModel.password.value = it },
+                        label = "Password",
+                        placeholder = "Enter password"
+                    )
+                    if (hasError) {
+                        Spacer(Modifier.height(8.dp))
+                        CustomText(text = errorMessage, color = Color.Red, fontSize = 14.sp)
                     }
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        CustomButton(
-                            variant = ButtonVariant.GREY,
-                            text = "Log In",
-                            onClick = onSwitchToLogin
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        CustomButton(
-                            variant = ButtonVariant.LIME,
-                            text = "Sign In",
-                            onClick = onSignInSuccess
-                        )
-                    }
+                }
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CustomButton(
+                        variant = ButtonVariant.GREY,
+                        text = "Log In",
+                        onClick = { loginViewModel.showSignupView.value = false }
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    CustomButton(
+                        variant = ButtonVariant.LIME,
+                        text = "Sign In",
+                        onClick = {
+                            loginViewModel.signUp()
+                        }
+                    )
                 }
             }
         }
-    )
+    }
 }
-
