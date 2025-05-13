@@ -281,7 +281,6 @@ class LoginViewModel : ViewModel() {
         return balance
     }
 
-
 }
 
 

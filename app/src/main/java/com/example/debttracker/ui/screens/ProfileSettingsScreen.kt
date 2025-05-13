@@ -70,7 +70,7 @@ import com.example.debttracker.ui.theme.AppBackgroundColor
 
 
 @Composable
-fun ProfileContent(navController: NavHostController) {
+fun ProfileContent(navController: NavHostController, loginViewModel: LoginViewModel = viewModel()) {
 
     var name by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
@@ -137,6 +137,17 @@ fun ProfileContent(navController: NavHostController) {
                     options = currencyOptions,
                     selectedOption = defaultCurrency,
                     onOptionSelected = { defaultCurrency = it }
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                CustomButton(
+                    variant = ButtonVariant.GREY,
+                    text = "Logout",
+                    onClick = {
+                        loginViewModel.signOut()
+                        navController.navigate("auth") {
+                            popUpTo(navController.graph.startDestinationRoute ?: "home") { inclusive = true }
+                        }
+                    }
                 )
             }
         }
