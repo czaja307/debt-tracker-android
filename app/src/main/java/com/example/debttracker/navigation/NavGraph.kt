@@ -36,6 +36,7 @@ import com.example.debttracker.ui.theme.AccentPrimary
 import com.example.debttracker.ui.theme.BottomNavBarColor
 import com.example.debttracker.ui.theme.TextPrimary
 import com.example.debttracker.viewmodels.LoginViewModel
+import androidx.compose.runtime.livedata.observeAsState
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     object Home : Screen("home", "Home", Icons.Filled.Home)
@@ -52,6 +53,8 @@ fun NavGraph() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val loginViewModel: LoginViewModel = viewModel()
+    val isLoggedIn by loginViewModel.isLoggedIn.observeAsState(false)
+    val startDestination = if (isLoggedIn) Screen.Home.route else "auth"
 
     Scaffold(
         bottomBar = {
@@ -62,16 +65,17 @@ fun NavGraph() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route,
+            startDestination = startDestination,
             modifier = Modifier.padding(innerPadding)
         ) {
+            composable("auth") { AuthHost(navController = navController, loginViewModel = loginViewModel) }
             composable(Screen.Home.route) { HomeScreen(navController) }
             composable(Screen.NewTransaction.route) { NewTransactionScreen(navController) }
             composable(Screen.Friends.route) { FriendsScreen(navController) }
             composable(Screen.AddFriend.route) { AddFriendScreen(navController) }
             composable(Screen.Invitations.route) { InvitationsScreen(navController) }
             composable(Screen.ProfileSettings.route) {
-                AuthHost(navController = navController, loginViewModel = loginViewModel)
+                ProfileContent(navController)
             }
             composable(
                 route = "friend_info/{friendId}",

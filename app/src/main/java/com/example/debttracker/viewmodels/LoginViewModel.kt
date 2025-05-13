@@ -281,7 +281,6 @@ class LoginViewModel(
         return balance
     }
 
-
 }
 
 
