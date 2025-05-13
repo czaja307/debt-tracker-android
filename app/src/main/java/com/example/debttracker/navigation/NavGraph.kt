@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -34,6 +35,7 @@ import com.example.debttracker.ui.screens.*
 import com.example.debttracker.ui.theme.AccentPrimary
 import com.example.debttracker.ui.theme.BottomNavBarColor
 import com.example.debttracker.ui.theme.TextPrimary
+import com.example.debttracker.viewmodels.LoginViewModel
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     object Home : Screen("home", "Home", Icons.Filled.Home)
@@ -49,6 +51,7 @@ fun NavGraph() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val loginViewModel: LoginViewModel = viewModel()
 
     Scaffold(
         bottomBar = {
@@ -67,7 +70,9 @@ fun NavGraph() {
             composable(Screen.Friends.route) { FriendsScreen(navController) }
             composable(Screen.AddFriend.route) { AddFriendScreen(navController) }
             composable(Screen.Invitations.route) { InvitationsScreen(navController) }
-            composable(Screen.ProfileSettings.route) { ProfileSettingsScreen(navController) }
+            composable(Screen.ProfileSettings.route) {
+                AuthHost(navController = navController, loginViewModel = loginViewModel)
+            }
             composable(
                 route = "friend_info/{friendId}",
                 arguments = listOf(navArgument("friendId") { type = NavType.StringType })
@@ -101,7 +106,6 @@ fun CustomBottomNavBar(navController: NavHostController, currentRoute: String?) 
                         Box(
                             modifier = Modifier
                                 .size(56.dp)
-                                //.offset(y = (-20).dp)
                                 .clip(CircleShape)
                                 .background(AccentPrimary),
                             contentAlignment = Alignment.Center
