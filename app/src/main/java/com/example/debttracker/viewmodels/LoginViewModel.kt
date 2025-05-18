@@ -15,7 +15,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.*
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
+    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+) : ViewModel() {
     val email = MutableLiveData("email@p1.pl")
     val password = MutableLiveData("123456")
     private val _currentUser = MutableLiveData<User?>()
@@ -28,9 +31,6 @@ class LoginViewModel : ViewModel() {
     val isLoggedIn = MutableLiveData(false)
     val showSignupView = MutableLiveData(false)
     val totalBalance = MutableLiveData(0.0)
-
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 
     private val authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
         val user = firebaseAuth.currentUser
