@@ -594,3 +594,4 @@ fun ColorBalanceText(balance: Float, fontSize: TextUnit = 32.sp) {
         color = balanceColor
     )
 }
+

@@ -85,25 +85,32 @@ private fun JetpackComposeBasicLineChart(
     )
 }
 
-// TODO: Replace with real data passed via ViewModel and constructor
-private val dataLineGraph = mapOf(
-    "Mon" to 40f,
-    "Tue" to 30f,
-    "Wed" to 50f,
-    "Thu" to 70f,
-    "Fri" to 110f,
-    "Sat" to 100f,
-    "Sun" to 20f,
-)
-
 @Composable
-fun DebtOverTimeGraph() {
+fun DebtOverTimeGraph(
+    data: Map<String, Float>
+) {
     val modelProducer = remember { CartesianChartModelProducer() }
 
-    LaunchedEffect(Unit) {
-        modelProducer.runTransaction {
-            lineSeries { series(dataLineGraph.values) }
-            extras { it[BottomAxisLabelKey] = dataLineGraph.keys.toList() }
+    LaunchedEffect(data) {  // <- Use data as LaunchedEffect key to update on data change
+        try {
+            if (data.isEmpty()) {
+                // Handle empty data case
+                modelProducer.runTransaction {
+                    lineSeries { series(listOf(0f)) }
+                    extras { it[BottomAxisLabelKey] = listOf("No Data") }
+                }
+            } else {
+                modelProducer.runTransaction {
+                    lineSeries { series(data.values.toList()) }
+                    extras { it[BottomAxisLabelKey] = data.keys.toList() }
+                }
+            }
+        } catch (e: Exception) {
+            // Handle exception (could log or show an error state)
+            modelProducer.runTransaction {
+                lineSeries { series(listOf(0f)) }
+                extras { it[BottomAxisLabelKey] = listOf("Error") }
+            }
         }
     }
     Card(

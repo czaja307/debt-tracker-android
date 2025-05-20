@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,10 +25,27 @@ import com.example.debttracker.ui.components.DebtOverTimeGraph
 import com.example.debttracker.ui.components.DebtPieChart
 import com.example.debttracker.ui.components.GlobalTopAppBar
 import com.github.tehras.charts.piechart.PieChartData
+import com.example.debttracker.viewmodels.LoginViewModel
+import kotlin.math.absoluteValue
+import androidx.compose.runtime.remember
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(
+    navController: NavHostController,
+    loginViewModel: LoginViewModel = viewModel()
+) {
     val scrollState = rememberScrollState()
+    // Observe stored user and compute real balances
+    val storedUser by loginViewModel.storedUser.observeAsState()
+    val balances = storedUser?.transactions?.mapValues { (friendId, _) ->
+        loginViewModel.calculateBalance(friendId).toFloat()
+    }.orEmpty()
+    val totalOwedToMe = balances.values.filter { it > 0f }
+        .sumOf { it.toDouble() }.toFloat()
+    val totalYouOwe = balances.values.filter { it < 0f }
+        .sumOf { it.toDouble() }.absoluteValue.toFloat()
 
     CustomBottomSheetScaffold(
         topBar = { GlobalTopAppBar(navController) },
@@ -44,22 +64,55 @@ fun HomeScreen(navController: NavHostController) {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 CustomText(
-                    text = "$12.44",
+                    text = if (totalYouOwe > 0f) "-$${"%.2f".format(totalYouOwe)}" else "$0.00",
                     fontSize = 64.sp
                 )
             }
         },
         sheetContent = {
-            val dataPieChart = mapOf(
-                "To me" to PieChartData.Slice(
-                    value = 40f,
-                    color = Color(0xFF3B4C00)
-                ),
-                "My" to PieChartData.Slice(
-                    value = 30f,
-                    color = Color(0xFFB4DD1E)
-                ),
-            )
+            // Prepare line chart data: aggregate debt over time
+            val historyData = remember(storedUser) {
+                val result = storedUser?.transactions?.values
+                    ?.flatten()
+                    ?.sortedBy { it.date.time } // Sort by timestamp to avoid operator ambiguity
+                    ?.groupBy { txn -> 
+                        try {
+                            SimpleDateFormat("dd MMM", Locale.getDefault()).format(txn.date)
+                        } catch (e: Exception) {
+                            "Unknown" // Fallback if date formatting fails
+                        }
+                    }
+                    ?.mapValues { entry ->
+                        entry.value.sumOf { txn ->
+                            val uid = loginViewModel.currentUser.value?.uid ?: ""
+                            val amt = if (txn.paidBy == uid) txn.amount else -txn.amount
+                            amt
+                        }.toFloat()
+                    } ?: emptyMap()
+                
+                // Ensure we have some data for the chart
+                if (result.isEmpty()) {
+                    mapOf("No Data" to 0f)
+                } else {
+                    result
+                }
+            }
+            // Pie chart slices from real balances
+            val dataPieChart = if (totalOwedToMe > 0f || totalYouOwe > 0f) {
+                mapOf(
+                    "To me" to PieChartData.Slice(
+                        value = totalOwedToMe.coerceAtLeast(0.01f), // Ensure at least minimal value for rendering
+                        color = Color(0xFF3B4C00)
+                    ),
+                    "My" to PieChartData.Slice(
+                        value = totalYouOwe.coerceAtLeast(0.01f), // Ensure at least minimal value for rendering
+                        color = Color(0xFFB4DD1E)
+                    )
+                )
+            } else {
+                // Provide dummy data if no real balances
+                mapOf("No Data" to PieChartData.Slice(value = 1f, color = Color.Gray))
+            }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -67,14 +120,11 @@ fun HomeScreen(navController: NavHostController) {
                     .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                BalanceField("People owe you", balance = 123.45f)
-                DebtOverTimeGraph()
+                BalanceField("People owe you", balance = totalOwedToMe)
+                DebtOverTimeGraph(data = historyData)
                 DebtPieChart(dataPieChart, "Current debt")
-                BalanceField("My total debt", balance = 123.45f)
-                BalanceField("Total debt to me", balance = 123.45f)
-                //TransactionField(date = "2025-04-08", amount = "$50.00")
-                //CustomButton(icon = Icons.Filled.Info, text = "Test Button")
-                //CustomTextField(label = "Description", text = textValue, onTextChange = { textValue = it })
+                BalanceField("My total debt", balance = totalYouOwe)
+                BalanceField("Total debt to me", balance = totalOwedToMe)
             }
         },
     )
