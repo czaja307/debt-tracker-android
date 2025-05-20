@@ -29,7 +29,8 @@ import com.example.debttracker.ui.components.CustomText
 
 @Composable
 fun AddFriendScreen(navController: NavHostController, loginViewModel: LoginViewModel = viewModel()) {
-    var username by remember { mutableStateOf("") }
+    // Use ViewModel LiveData for friend email input
+    val friendEmail by loginViewModel.friendEmail.observeAsState("")
     val hasError by loginViewModel.hasError.observeAsState(false)
     val errorMessage by loginViewModel.errorMessage.observeAsState("")
 
@@ -46,10 +47,10 @@ fun AddFriendScreen(navController: NavHostController, loginViewModel: LoginViewM
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             CustomTextField(
-                value = username,
-                onValueChange = { username = it },
-                label = "Enter username",
-                placeholder = "username here",
+                value = friendEmail,
+                onValueChange = { loginViewModel.friendEmail.value = it },
+                label = "Friend Email",
+                placeholder = "Enter friend email",
                 modifier = Modifier.fillMaxWidth()
             )
             if (hasError) {
@@ -59,7 +60,7 @@ fun AddFriendScreen(navController: NavHostController, loginViewModel: LoginViewM
             CustomButton(
                 text = "Send Invite",
                 onClick = {
-                    loginViewModel.sendFriendRequest(username)
+                    loginViewModel.sendFriendRequest(friendEmail)
                     navController.navigateUp()
                 },
             )

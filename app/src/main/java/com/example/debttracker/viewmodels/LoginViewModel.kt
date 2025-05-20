@@ -31,6 +31,7 @@ class LoginViewModel(
     val isLoggedIn = MutableLiveData(false)
     val showSignupView = MutableLiveData(false)
     val totalBalance = MutableLiveData(0.0)
+    val friendEmail = MutableLiveData("")
 
     private val authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
         val user = firebaseAuth.currentUser
