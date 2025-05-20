@@ -15,10 +15,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.debttracker.data.PreferencesManager
 import com.example.debttracker.ui.components.BackTopAppBar
 import com.example.debttracker.ui.components.ButtonVariant
 import com.example.debttracker.ui.components.CustomButton
@@ -37,6 +43,7 @@ import com.example.debttracker.ui.components.CustomTextField
 import com.example.debttracker.ui.components.CustomUserAvatar
 import com.example.debttracker.ui.theme.AppBackgroundColor
 import com.example.debttracker.viewmodels.LoginViewModel
+import kotlinx.coroutines.launch
 import java.io.InputStream
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
@@ -71,14 +78,25 @@ import com.example.debttracker.ui.theme.AppBackgroundColor
 
 @Composable
 fun ProfileContent(navController: NavHostController, loginViewModel: LoginViewModel = viewModel()) {
-
+    val context = LocalContext.current
+    val preferencesManager = remember { PreferencesManager(context) }
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    // Get saved preferences
+    val savedName by preferencesManager.userName.collectAsState(initial = "")
+    val savedCurrency by preferencesManager.userCurrency.collectAsState(initial = "USD")
+    
     var name by remember { mutableStateOf("") }
-    var username by remember { mutableStateOf("") }
     var defaultCurrency by remember { mutableStateOf("USD") }
-    val currencyOptions = listOf("USD", "EUR", "GBP")
+    val currencyOptions = listOf("USD", "EUR", "GBP", "PLN")
     var avatarImage by remember { mutableStateOf<ImageBitmap?>(null) }
 
-    val context = LocalContext.current
+    // Load saved preferences
+    LaunchedEffect(savedName, savedCurrency) {
+        name = savedName
+        defaultCurrency = savedCurrency
+    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -95,6 +113,7 @@ fun ProfileContent(navController: NavHostController, loginViewModel: LoginViewMo
         topBar = {
             BackTopAppBar(title = "Profile Settings", navController = navController)
         },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         content = { innerPadding ->
             Column(
                 modifier = Modifier
@@ -123,22 +142,29 @@ fun ProfileContent(navController: NavHostController, loginViewModel: LoginViewMo
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                CustomTextField(
-                    value = username,
-                    onValueChange = { username = it },
-                    label = "Username",
-                    placeholder = "Enter your username"
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
                 CustomEnumPickField(
                     label = "Default Currency",
                     options = currencyOptions,
                     selectedOption = defaultCurrency,
                     onOptionSelected = { defaultCurrency = it }
                 )
+                
                 Spacer(modifier = Modifier.height(24.dp))
+                
+                CustomButton(
+                    variant = ButtonVariant.LIME,
+                    text = "Save",
+                    onClick = {
+                        coroutineScope.launch {
+                            preferencesManager.saveUserName(name)
+                            preferencesManager.saveUserCurrency(defaultCurrency)
+                            snackbarHostState.showSnackbar("Settings saved successfully")
+                        }
+                    }
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
                 CustomButton(
                     variant = ButtonVariant.GREY,
                     text = "Logout",
@@ -225,9 +251,15 @@ fun LoginScreen(navController: NavHostController, loginViewModel: LoginViewModel
 }
 @Composable
 fun SignInScreen(navController: NavHostController, loginViewModel: LoginViewModel) {
+    val context = LocalContext.current
+    val preferencesManager = remember { PreferencesManager(context) }
+    val coroutineScope = rememberCoroutineScope()
+    
     var name by remember { mutableStateOf("") }
     val email by loginViewModel.email.observeAsState("")
     val password by loginViewModel.password.observeAsState("")
+    var defaultCurrency by remember { mutableStateOf("USD") }
+    val currencyOptions = listOf("USD", "EUR", "GBP", "PLN")
 
     val hasError by loginViewModel.hasError.observeAsState(false)
     val errorMessage by loginViewModel.errorMessage.observeAsState("")
@@ -276,6 +308,13 @@ fun SignInScreen(navController: NavHostController, loginViewModel: LoginViewMode
                         label = "Password",
                         placeholder = "Enter password"
                     )
+                    Spacer(Modifier.height(8.dp))
+                    CustomEnumPickField(
+                        label = "Default Currency",
+                        options = currencyOptions,
+                        selectedOption = defaultCurrency,
+                        onOptionSelected = { defaultCurrency = it }
+                    )
                     if (hasError) {
                         Spacer(Modifier.height(8.dp))
                         CustomText(text = errorMessage, color = Color.Red, fontSize = 14.sp)
@@ -295,7 +334,12 @@ fun SignInScreen(navController: NavHostController, loginViewModel: LoginViewMode
                         variant = ButtonVariant.LIME,
                         text = "Sign In",
                         onClick = {
-                            loginViewModel.signUp()
+                            coroutineScope.launch {
+                                // Save user preferences locally
+                                preferencesManager.saveUserName(name)
+                                preferencesManager.saveUserCurrency(defaultCurrency)
+                                loginViewModel.signUp()
+                            }
                         }
                     )
                 }
