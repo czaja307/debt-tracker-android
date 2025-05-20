@@ -46,12 +46,9 @@ fun FriendInfoScreen(
     loginViewModel: LoginViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
-    // Fetch stored user and derive transactions with this friend
     val storedUser by loginViewModel.storedUser.observeAsState()
     val transactions = storedUser?.transactions?.get(friendId).orEmpty()
-    // Observe current user as Compose state
     val currentUser by loginViewModel.currentUser.observeAsState()
-    // Fetch friend email asynchronously
     val friendEmail by produceState(initialValue = "", friendId) {
         value = loginViewModel.fetchUserEmail(friendId)
     }
