@@ -3,8 +3,10 @@ package com.example.debttracker.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -19,10 +21,17 @@ import com.example.debttracker.ui.components.BackTopAppBar
 import com.example.debttracker.ui.components.CustomButton
 import com.example.debttracker.ui.components.CustomTextField
 import com.example.debttracker.ui.theme.AppBackgroundColor
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.livedata.observeAsState
+import com.example.debttracker.viewmodels.LoginViewModel
+import androidx.compose.ui.graphics.Color
+import com.example.debttracker.ui.components.CustomText
 
 @Composable
-fun AddFriendScreen(navController: NavHostController) {
+fun AddFriendScreen(navController: NavHostController, loginViewModel: LoginViewModel = viewModel()) {
     var username by remember { mutableStateOf("") }
+    val hasError by loginViewModel.hasError.observeAsState(false)
+    val errorMessage by loginViewModel.errorMessage.observeAsState("")
 
     Scaffold(
         modifier = Modifier.background(AppBackgroundColor),
@@ -43,10 +52,14 @@ fun AddFriendScreen(navController: NavHostController) {
                 placeholder = "username here",
                 modifier = Modifier.fillMaxWidth()
             )
+            if (hasError) {
+                Spacer(modifier = Modifier.height(8.dp))
+                CustomText(text = errorMessage, color = Color.Red)
+            }
             CustomButton(
                 text = "Send Invite",
                 onClick = {
-                    // testowa akcja typu wysłanie zaproszenia do znaj.
+                    loginViewModel.sendFriendRequest(username)
                     navController.navigateUp()
                 },
             )
