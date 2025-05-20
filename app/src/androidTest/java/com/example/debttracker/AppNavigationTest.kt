@@ -60,8 +60,8 @@ class AppNavigationTest {
         // We use the testTag added to the title Text in BackTopAppBar.
         composeTestRule.onNode(hasTestTag("top_app_bar_title") and hasText("Login"), useUnmergedTree = true).assertIsDisplayed()
 
-        // Check for a unique element on the LoginScreen, e.g., the "Username" text field label
-        composeTestRule.onNodeWithText("Username").assertIsDisplayed()
+        // Check for a unique element on the LoginScreen, e.g., the "Email" text field label
+        composeTestRule.onNodeWithText("Email").assertIsDisplayed()
     }
 
     @Test
