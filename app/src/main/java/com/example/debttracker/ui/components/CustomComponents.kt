@@ -60,7 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.debttracker.R
-import com.example.debttracker.ui.screens.User
+import com.example.debttracker.ui.screens.FriendDisplay
 import com.example.debttracker.ui.theme.AccentPrimary
 import com.example.debttracker.ui.theme.AppBackgroundColor
 import com.example.debttracker.ui.theme.ComponentCornerRadiusBig
@@ -95,7 +95,7 @@ fun TransactionField(date: String, amount: String, modifier: Modifier = Modifier
 // b) FriendField – kafelek z danymi o znajomym
 @Composable
 fun FriendField(
-    friend: User,
+    friend: FriendDisplay,
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {

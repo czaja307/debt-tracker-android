@@ -15,11 +15,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.debttracker.ui.components.BackTopAppBar
 import com.example.debttracker.ui.components.ButtonVariant
@@ -30,14 +34,29 @@ import com.example.debttracker.ui.components.CustomText
 import com.example.debttracker.ui.components.CustomUserAvatar
 import com.example.debttracker.ui.components.TransactionField
 import com.example.debttracker.ui.theme.AppBackgroundColor
+import com.example.debttracker.viewmodels.LoginViewModel
+import com.example.debttracker.models.Transaction
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
-fun FriendInfoScreen(navController: NavHostController, friendId: String) {
+fun FriendInfoScreen(
+    navController: NavHostController,
+    friendId: String,
+    loginViewModel: LoginViewModel = viewModel()
+) {
     val scrollState = rememberScrollState()
-    val friendBalance = 15.50f
-    val friend = exampleUserList[friendId.toInt() - 1]
-
-    val title = "${friend.name}'s info"
+    // Fetch stored user and derive transactions with this friend
+    val storedUser by loginViewModel.storedUser.observeAsState()
+    val transactions = storedUser?.transactions?.get(friendId).orEmpty()
+    // Observe current user as Compose state
+    val currentUser by loginViewModel.currentUser.observeAsState()
+    // Fetch friend email asynchronously
+    val friendEmail by produceState(initialValue = "", friendId) {
+        value = loginViewModel.fetchUserEmail(friendId)
+    }
+    val friendBalance = loginViewModel.calculateBalance(friendId).toFloat()
+    val title = "${friendEmail}'s info"
 
     CustomBottomSheetScaffold(
         topBar = { BackTopAppBar(title, navController) },
@@ -52,7 +71,7 @@ fun FriendInfoScreen(navController: NavHostController, friendId: String) {
             ) {
                 Spacer(modifier = Modifier.height(16.dp))
                 CustomUserAvatar(
-                    imageRes = friend.imageRes,
+                    imageRes = null,
                     editable = false,
                     onEditClick = { },
                     modifier = Modifier.size(172.dp)
@@ -88,24 +107,17 @@ fun FriendInfoScreen(navController: NavHostController, friendId: String) {
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
-                TransactionField(date = "14 Apr 2025", amount = "$10.00")
-                TransactionField(date = "13 Apr 2025", amount = "$-5.00")
-                TransactionField(date = "12 Apr 2025", amount = "$20.00")
-                TransactionField(date = "14 Apr 2025", amount = "$10.00")
-                TransactionField(date = "13 Apr 2025", amount = "$-5.00")
-                TransactionField(date = "12 Apr 2025", amount = "$20.00")
-                TransactionField(date = "14 Apr 2025", amount = "$10.00")
-                TransactionField(date = "13 Apr 2025", amount = "$-5.00")
-                TransactionField(date = "12 Apr 2025", amount = "$20.00")
-                TransactionField(date = "14 Apr 2025", amount = "$10.00")
-                TransactionField(date = "13 Apr 2025", amount = "$-5.00")
-                TransactionField(date = "12 Apr 2025", amount = "$20.00")
-                TransactionField(date = "14 Apr 2025", amount = "$10.00")
-                TransactionField(date = "13 Apr 2025", amount = "$-5.00")
-                TransactionField(date = "12 Apr 2025", amount = "$20.00")
-                TransactionField(date = "14 Apr 2025", amount = "$10.00")
-                TransactionField(date = "13 Apr 2025", amount = "$-5.00")
-                TransactionField(date = "12 Apr 2025", amount = "$20.00")
+                // Display actual transactions
+                transactions.forEach { txn ->
+                    // Format transaction date and amount using current user state
+                    val date = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                        .format(txn.date)
+                    val amt = if (txn.paidBy == currentUser?.uid)
+                        "+$${txn.amount}"
+                    else
+                        "-$${txn.amount}"
+                    TransactionField(date = date, amount = amt)
+                }
             }
         }
     )

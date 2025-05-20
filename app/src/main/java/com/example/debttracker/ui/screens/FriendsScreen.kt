@@ -24,33 +24,39 @@ import com.example.debttracker.ui.components.CustomText
 import com.example.debttracker.ui.components.FriendField
 import com.example.debttracker.ui.components.GlobalTopAppBar
 import com.example.debttracker.ui.theme.AppBackgroundColor
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import com.example.debttracker.models.User
+import com.example.debttracker.viewmodels.LoginViewModel
+import androidx.compose.runtime.produceState
 
-// temporary, kiedyś sobie zamienie na models.User,
-// ale nie wiem czy ta klasa nie ulegnie jeszcze zmienom różnym
-data class User(
+// Local model for displaying friends
+data class FriendDisplay(
     val id: String,
     val name: String,
     val balance: Float,
     val imageRes: Int? = null
 )
 
-//public static example user list
-val exampleUserList = listOf(
-    User(id = "1", name = "John Doe", balance = 25.0f, imageRes = null),
-    User(id = "2", name = "Jane Doe", balance = -15.5f, imageRes = R.drawable.profile_pic),
-    User(id = "3", name = "Alice Smith", balance = 12.3f, imageRes = R.drawable.sheldon),
-    User(id = "4", name = "Bob Johnson", balance = 55.0f, imageRes = R.drawable.app_logo)
-)
-
 @Composable
-fun FriendsScreen(
-    navController: NavHostController,
-    friendList: List<User> = exampleUserList
-) {
+fun FriendsScreen(navController: NavHostController, loginViewModel: LoginViewModel = viewModel()) {
     Scaffold(
         modifier = Modifier.background(AppBackgroundColor),
         topBar = { GlobalTopAppBar(navController) },
         content = { innerPadding ->
+            // observe stored FirestoreUser
+            val storedUser by loginViewModel.storedUser.observeAsState()
+            val friendIds = storedUser?.friends.orEmpty()
+            // produce list of FriendDisplay by fetching emails and balances
+            val friendDisplays by produceState(initialValue = emptyList<FriendDisplay>(), friendIds) {
+                val list = friendIds.map { id ->
+                    val email = loginViewModel.fetchUserEmail(id)
+                    val bal = loginViewModel.calculateBalance(id).toFloat()
+                    FriendDisplay(id = id, name = email, balance = bal)
+                }
+                value = list
+            }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -79,7 +85,7 @@ fun FriendsScreen(
                     )
                 }
 
-                if (friendList.isEmpty()) {
+                if (friendDisplays.isEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -90,11 +96,8 @@ fun FriendsScreen(
                         )
                     }
                 } else {
-                    friendList.forEach { friend ->
-                        FriendField(
-                            friend = friend,
-                            navController = navController
-                        )
+                    friendDisplays.forEach { friend ->
+                        FriendField(friend = friend, navController = navController)
                     }
                 }
             }
