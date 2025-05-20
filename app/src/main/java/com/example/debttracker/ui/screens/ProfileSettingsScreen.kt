@@ -148,7 +148,23 @@ fun ProfileContent(navController: NavHostController, loginViewModel: LoginViewMo
                     selectedOption = defaultCurrency,
                     onOptionSelected = { defaultCurrency = it }
                 )
+                
                 Spacer(modifier = Modifier.height(24.dp))
+                
+                CustomButton(
+                    variant = ButtonVariant.LIME,
+                    text = "Save",
+                    onClick = {
+                        coroutineScope.launch {
+                            preferencesManager.saveUserName(name)
+                            preferencesManager.saveUserCurrency(defaultCurrency)
+                            snackbarHostState.showSnackbar("Settings saved successfully")
+                        }
+                    }
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
                 CustomButton(
                     variant = ButtonVariant.GREY,
                     text = "Logout",
@@ -235,9 +251,15 @@ fun LoginScreen(navController: NavHostController, loginViewModel: LoginViewModel
 }
 @Composable
 fun SignInScreen(navController: NavHostController, loginViewModel: LoginViewModel) {
+    val context = LocalContext.current
+    val preferencesManager = remember { PreferencesManager(context) }
+    val coroutineScope = rememberCoroutineScope()
+    
     var name by remember { mutableStateOf("") }
     val email by loginViewModel.email.observeAsState("")
     val password by loginViewModel.password.observeAsState("")
+    var defaultCurrency by remember { mutableStateOf("USD") }
+    val currencyOptions = listOf("USD", "EUR", "GBP", "PLN")
 
     val hasError by loginViewModel.hasError.observeAsState(false)
     val errorMessage by loginViewModel.errorMessage.observeAsState("")
@@ -286,6 +308,13 @@ fun SignInScreen(navController: NavHostController, loginViewModel: LoginViewMode
                         label = "Password",
                         placeholder = "Enter password"
                     )
+                    Spacer(Modifier.height(8.dp))
+                    CustomEnumPickField(
+                        label = "Default Currency",
+                        options = currencyOptions,
+                        selectedOption = defaultCurrency,
+                        onOptionSelected = { defaultCurrency = it }
+                    )
                     if (hasError) {
                         Spacer(Modifier.height(8.dp))
                         CustomText(text = errorMessage, color = Color.Red, fontSize = 14.sp)
@@ -305,7 +334,12 @@ fun SignInScreen(navController: NavHostController, loginViewModel: LoginViewMode
                         variant = ButtonVariant.LIME,
                         text = "Sign In",
                         onClick = {
-                            loginViewModel.signUp()
+                            coroutineScope.launch {
+                                // Save user preferences locally
+                                preferencesManager.saveUserName(name)
+                                preferencesManager.saveUserCurrency(defaultCurrency)
+                                loginViewModel.signUp()
+                            }
                         }
                     )
                 }
