@@ -248,15 +248,18 @@ fun CustomButton(
     aspectRatio: Float = 5f,
     buttonWidth: Float = 0f,
     buttonShape: Shape = RoundedCornerShape(ComponentCornerRadiusBig),
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = when (variant) {
-        ButtonVariant.LIME -> AccentPrimary
-        ButtonVariant.GREY -> Color.DarkGray
+    val backgroundColor = when {
+        !enabled -> Color.Gray
+        variant == ButtonVariant.LIME -> AccentPrimary
+        else -> Color.DarkGray
     }
-    val textColor = when (variant) {
-        ButtonVariant.LIME -> Color.Black
-        ButtonVariant.GREY -> Color.White
+    val textColor = when {
+        !enabled -> Color.DarkGray
+        variant == ButtonVariant.LIME -> Color.Black
+        else -> Color.White
     }
 
     Surface(
@@ -267,7 +270,7 @@ fun CustomButton(
                 if (buttonWidth == 0f) Modifier.fillMaxWidth() else Modifier.width(buttonWidth.dp)
             )
             .aspectRatio(aspectRatio)
-            .clickable { onClick() }
+            .clickable(enabled = enabled) { onClick() }
     ) {
         Row(
             modifier = Modifier
@@ -456,6 +459,7 @@ fun CustomNumberField(
         OutlinedTextField(
             value = value,
             onValueChange = { newValue ->
+                // Allow empty string, digits, and up to 2 decimal places
                 if (newValue.isEmpty() || newValue.matches(Regex("^\\d*(\\.\\d{0,2})?\$"))) {
                     onValueChange(newValue)
                 }
@@ -479,7 +483,14 @@ fun CustomNumberField(
                 disabledTextColor = Color.Gray,
                 disabledLabelColor = Color.Gray
             ),
-            shape = RoundedCornerShape(ComponentCornerRadiusSmall)
+            shape = RoundedCornerShape(ComponentCornerRadiusSmall),
+            // Format with currency symbol based on focus state
+            prefix = {
+                Text(
+                    text = "$",
+                    color = TextPrimary
+                )
+            }
         )
     }
 }

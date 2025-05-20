@@ -28,6 +28,7 @@ import com.github.tehras.charts.piechart.PieChartData
 import com.example.debttracker.viewmodels.LoginViewModel
 import kotlin.math.absoluteValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -46,6 +47,11 @@ fun HomeScreen(
         .sumOf { it.toDouble() }.toFloat()
     val totalYouOwe = balances.values.filter { it < 0f }
         .sumOf { it.toDouble() }.absoluteValue.toFloat()
+        
+    // Refresh data when screen becomes active
+    LaunchedEffect(Unit) {
+        loginViewModel.refreshUserData()
+    }
 
     CustomBottomSheetScaffold(
         topBar = { GlobalTopAppBar(navController) },

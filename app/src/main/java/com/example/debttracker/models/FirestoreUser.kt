@@ -14,7 +14,23 @@ data class FirestoreUser (
             val uid = map["uid"] as? String ?: return null
             val email = map["email"] as? String ?: return null
             val name = map["name"] as? String ?: return null
-            val friends = (map["friends"] as? List<String>) ?: emptyList()
+            
+            println("DEBUG: FirestoreUser.fromMap processing user: $email")
+            
+            // Process friends list
+            val friendsList = map["friends"]
+            println("DEBUG: Raw friends data type: ${friendsList?.javaClass?.name}")
+            val friends = when (friendsList) {
+                is List<*> -> {
+                    println("DEBUG: Friends list found with ${friendsList.size} items")
+                    friendsList.mapNotNull { it as? String }
+                }
+                else -> {
+                    println("DEBUG: No friends list found or it's not a List")
+                    emptyList()
+                }
+            }
+            
             val incomingRequests = (map["incomingRequests"] as? List<String>) ?: emptyList()
             val outgoingRequests = (map["outgoingRequests"] as? List<String>) ?: emptyList()
             val transactions = map["transactions"] as? Map<String, List<Map<String, Any>>>
@@ -24,7 +40,6 @@ data class FirestoreUser (
                 entry.value.mapNotNull { Transaction.fromMap(it) }
             } ?: emptyMap()
             return FirestoreUser(uid, email, name, friends, incomingRequests, outgoingRequests, transactionsConverted)
-
         }
     }
 

@@ -84,6 +84,14 @@ fun NavGraph() {
                 val friendId = backStackEntry.arguments?.getString("friendId") ?: ""
                 FriendInfoScreen(navController, friendId)
             }
+            
+            composable(
+                route = "friend_transaction/{friendId}",
+                arguments = listOf(navArgument("friendId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val friendId = backStackEntry.arguments?.getString("friendId") ?: ""
+                FriendTransactionScreen(navController, friendId)
+            }
         }
     }
 }

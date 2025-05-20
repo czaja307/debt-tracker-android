@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.produceState
@@ -54,6 +55,12 @@ fun FriendInfoScreen(
     }
     val friendBalance = loginViewModel.calculateBalance(friendId).toFloat()
     val title = "${friendEmail}'s info"
+    
+    // Refresh data when screen becomes active
+    LaunchedEffect(friendId) {
+        // Ensure we have the latest transaction data
+        loginViewModel.refreshUserData()
+    }
 
     CustomBottomSheetScaffold(
         topBar = { BackTopAppBar(title, navController) },
@@ -80,7 +87,9 @@ fun FriendInfoScreen(
                     variant = ButtonVariant.LIME,
                     icon = Icons.Default.Add,
                     text = "New",
-                    onClick = { },
+                    onClick = { 
+                        navController.navigate("friend_transaction/$friendId") 
+                    },
                     fontSize = 24.sp,
                     aspectRatio = 3f,
                     buttonWidth = 200f
