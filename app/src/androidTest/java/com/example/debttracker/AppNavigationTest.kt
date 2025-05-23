@@ -48,38 +48,28 @@ class AppNavigationTest {
 
     @Test
     fun navigateToProfileSettings_fromTopAppBar_showsLoginScreenInitially() {
-        // 1. Ensure Home screen is initially displayed
         composeTestRule.onNodeWithText("You owe").assertIsDisplayed()
 
-        // 2. Click on the profile icon in the GlobalTopAppBar
         composeTestRule.onNodeWithContentDescription("Profile").performClick()
 
-        // 3. Verify LoginScreen is displayed (as user is not logged in by default)
-        // ProfileSettingsScreen wraps LoginScreen if not logged in.
-        // The LoginScreen's BackTopAppBar has title "Login".
-        // We use the testTag added to the title Text in BackTopAppBar.
-        composeTestRule.onNode(hasTestTag("top_app_bar_title") and hasText("Login"), useUnmergedTree = true).assertIsDisplayed()
+        composeTestRule.onNode(
+            hasTestTag("top_app_bar_title") and hasText("Login"),
+            useUnmergedTree = true
+        ).assertIsDisplayed()
 
-        // Check for a unique element on the LoginScreen, e.g., the "Email" text field label
         composeTestRule.onNodeWithText("Email").assertIsDisplayed()
     }
 
     @Test
     fun navigateToNewTransactionScreen_fromBottomNav() {
-        // 1. Ensure Home screen is initially displayed
         composeTestRule.onNodeWithText("You owe").assertIsDisplayed()
 
-        // 2. Click on the "New Transaction" item in the bottom navigation bar
-        // The icon itself has contentDescription = Screen.NewTransaction.title ("New Transaction")
         composeTestRule.onNodeWithContentDescription(
             Screen.NewTransaction.title,
             useUnmergedTree = true
         ).performClick()
 
-        // 3. Verify NewTransactionScreen is displayed
-        // NewTransactionScreen has a BackTopAppBar with title "Add a new transaction"
         composeTestRule.onNodeWithText("Add a new transaction").assertIsDisplayed()
-        // And a field with label "Enter an amount"
         composeTestRule.onNodeWithText("Enter an amount").assertIsDisplayed()
     }
 }
