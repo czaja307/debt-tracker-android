@@ -86,16 +86,31 @@ fun ProfileContent(navController: NavHostController, loginViewModel: LoginViewMo
     // Get saved preferences
     val savedName by preferencesManager.userName.collectAsState(initial = "")
     val savedCurrency by preferencesManager.userCurrency.collectAsState(initial = "USD")
+    val savedProfilePictureUri by preferencesManager.profilePictureUri.collectAsState(initial = "")
     
     var name by remember { mutableStateOf("") }
     var defaultCurrency by remember { mutableStateOf("USD") }
     val currencyOptions = listOf("USD", "EUR", "GBP", "PLN")
     var avatarImage by remember { mutableStateOf<ImageBitmap?>(null) }
 
-    // Load saved preferences
-    LaunchedEffect(savedName, savedCurrency) {
+    // Load saved preferences and profile picture
+    LaunchedEffect(savedName, savedCurrency, savedProfilePictureUri) {
         name = savedName
         defaultCurrency = savedCurrency
+        
+        // Load saved profile picture
+        if (savedProfilePictureUri.isNotEmpty()) {
+            try {
+                val uri = Uri.parse(savedProfilePictureUri)
+                val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
+                val bitmap = inputStream?.let { BitmapFactory.decodeStream(it) }
+                avatarImage = bitmap?.asImageBitmap()
+                inputStream?.close()
+            } catch (e: Exception) {
+                // Handle case where saved URI is no longer valid
+                println("Failed to load saved profile picture: ${e.message}")
+            }
+        }
     }
 
     val launcher = rememberLauncherForActivityResult(
@@ -106,6 +121,11 @@ fun ProfileContent(navController: NavHostController, loginViewModel: LoginViewMo
             val bitmap = inputStream?.let { BitmapFactory.decodeStream(it) }
             avatarImage = bitmap?.asImageBitmap()
             inputStream?.close()
+            
+            // Save the selected image URI to preferences
+            coroutineScope.launch {
+                preferencesManager.saveProfilePictureUri(it.toString())
+            }
         }
     }
 

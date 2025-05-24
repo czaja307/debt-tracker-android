@@ -21,6 +21,7 @@ class PreferencesManager(private val context: Context) {
         // Keys for user preferences
         private val NAME_KEY = stringPreferencesKey("user_name")
         private val CURRENCY_KEY = stringPreferencesKey("user_currency")
+        private val PROFILE_PICTURE_KEY = stringPreferencesKey("profile_picture_uri")
     }
     
     /**
@@ -38,6 +39,13 @@ class PreferencesManager(private val context: Context) {
     }
     
     /**
+     * Get the stored profile picture URI
+     */
+    val profilePictureUri: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PROFILE_PICTURE_KEY] ?: ""
+    }
+    
+    /**
      * Save the user name
      */
     suspend fun saveUserName(name: String) {
@@ -52,6 +60,15 @@ class PreferencesManager(private val context: Context) {
     suspend fun saveUserCurrency(currency: String) {
         context.dataStore.edit { preferences ->
             preferences[CURRENCY_KEY] = currency
+        }
+    }
+    
+    /**
+     * Save the profile picture URI
+     */
+    suspend fun saveProfilePictureUri(uri: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PROFILE_PICTURE_KEY] = uri
         }
     }
     
