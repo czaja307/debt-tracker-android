@@ -44,4 +44,17 @@
 | `navigateToProfileSettings_fromTopAppBar_showsLoginScreenInitially` | Tests navigation to the profile/settings area (which shows `LoginScreen` if not logged in) by clicking the profile icon in the top app bar. |
 | `navigateToNewTransactionScreen_fromBottomNav`                      | Tests navigation from the `HomeScreen` to the `NewTransactionScreen` using the "New Transaction" button in the bottom navigation bar.       |
 
+#### `PerformanceTest.java` (API and Database Performance)
+
+| Test Case                                 | Description                                                                                                                                              |
+|:------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `testCurrencyApiResponseTime`             | Tests the response time of the FreeCurrencyAPI used for currency conversion, ensuring it responds within 5 seconds with valid exchange rate data.      |
+| `testFirestoreConnectionPerformance`      | Verifies Firestore database connection performance by executing a simple query and ensuring response time is under 3 seconds.                          |
+| `testCurrencyApiDataValidation`          | Validates that the currency API returns properly formatted data with reasonable exchange rates (PLN rate between 0.1 and 10 relative to USD).          |
+| `testFirebaseAuthPerformance`            | Tests Firebase Authentication initialization performance to ensure it completes within 5 seconds.                                                        |
+| `testMultipleCurrencyApiCalls`           | Tests performance of consecutive currency API calls for different currencies (EUR, GBP, CZK) with average response time under 4 seconds.               |
+| `testFirestoreWritePerformance`          | Measures Firestore write operation performance by creating and deleting a test document, ensuring completion within 4 seconds.                         |
+| `testCurrencyApiErrorHandling`           | Tests API error handling by using an invalid API key and verifying that the system properly handles authentication failures.                            |
+| `testNetworkTimeoutHandling`             | Tests network timeout handling by setting aggressive timeout values and ensuring the system responds appropriately within 6 seconds.                   |
+
 
