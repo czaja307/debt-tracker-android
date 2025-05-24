@@ -137,7 +137,9 @@ fun DebtOverTimeGraph(
 
 @Composable
 fun DebtPieChart(
-    data: Map<String, PieChartData.Slice>, title: String
+    data: Map<String, PieChartData.Slice>, 
+    title: String,
+    currencySymbol: String = "$"
 ) {
     Box(
         modifier = Modifier
@@ -190,7 +192,7 @@ fun DebtPieChart(
                         LegendItem(
                             color = slice.color,
                             label = label,
-                            value = "$${slice.value.toInt()}",
+                            value = "$currencySymbol${slice.value.toInt()}",
                             percentage = "$percentage%",
                             modifier = Modifier.padding(horizontal = 8.dp)
                         )

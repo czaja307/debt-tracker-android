@@ -11,16 +11,22 @@ import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 import androidx.lifecycle.asFlow
 import kotlinx.coroutines.flow.filterNotNull
+import android.content.Context
+import com.example.debttracker.data.PreferencesManager
+import kotlinx.coroutines.flow.first
 
 /**
  * ViewModel for adding transactions between users
  * Handles form validation, currency conversion, and transaction creation
  */
-class AddDebtViewModel(private val loginViewModel: LoginViewModel) : ViewModel() {
+class AddDebtViewModel(
+    private val loginViewModel: LoginViewModel,
+    private val context: Context
+) : ViewModel() {
     val pays = MutableLiveData<String>()
     val indebted = MutableLiveData<String>()
     val amount = MutableLiveData("")
-    val currency = MutableLiveData("PLN")
+    val currency = MutableLiveData("USD") // Default will be updated from preferences
     val hasError = MutableLiveData(false)
     val errorMessage = MutableLiveData("")
     val successMessage = MutableLiveData("")
@@ -28,11 +34,19 @@ class AddDebtViewModel(private val loginViewModel: LoginViewModel) : ViewModel()
     val friendsWithEmails = MutableLiveData<List<Pair<String, String>>>(emptyList())
     val isLoadingFriends = MutableLiveData(false)
     
+    private val preferencesManager = PreferencesManager(context)
     val availableCurrencies = listOf("PLN", "USD", "EUR", "GBP", "CZK")
     private val apiKey: String = "fca_live_9r3DTzOKWo8YyvDndrpNu9Rl2rELohMD3VuxJBOj"
     
     init {
         println("DEBUG: AddDebtViewModel init called")
+        // Load user's preferred currency
+        viewModelScope.launch {
+            val preferredCurrency = preferencesManager.userCurrency.first()
+            currency.value = preferredCurrency
+            println("DEBUG: Setting default currency to: $preferredCurrency")
+        }
+        
         viewModelScope.launch {
             // Wait a bit to make sure the LoginViewModel has loaded its data
             kotlinx.coroutines.delay(500)
@@ -153,7 +167,11 @@ class AddDebtViewModel(private val loginViewModel: LoginViewModel) : ViewModel()
                 
                 // Reset form fields for next use
                 amount.postValue("")
-                currency.postValue("PLN")
+                // Reset to user's preferred currency
+                viewModelScope.launch {
+                    val preferredCurrency = preferencesManager.userCurrency.first()
+                    currency.postValue(preferredCurrency)
+                }
                 conversionRate.postValue(1.0)
             } catch (e: Exception) {
                 hasError.postValue(true)
@@ -168,7 +186,11 @@ class AddDebtViewModel(private val loginViewModel: LoginViewModel) : ViewModel()
      */
     fun resetState() {
         amount.value = ""
-        currency.value = "PLN"
+        // Reset to user's preferred currency
+        viewModelScope.launch {
+            val preferredCurrency = preferencesManager.userCurrency.first()
+            currency.value = preferredCurrency
+        }
         pays.value = ""
         indebted.value = ""
         hasError.value = false

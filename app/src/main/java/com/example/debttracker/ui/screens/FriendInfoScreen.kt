@@ -19,8 +19,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -34,9 +37,11 @@ import com.example.debttracker.ui.components.CustomButton
 import com.example.debttracker.ui.components.CustomText
 import com.example.debttracker.ui.components.CustomUserAvatar
 import com.example.debttracker.ui.components.TransactionField
+import com.example.debttracker.ui.components.getCurrencySymbol
 import com.example.debttracker.ui.theme.AppBackgroundColor
 import com.example.debttracker.viewmodels.LoginViewModel
 import com.example.debttracker.models.Transaction
+import com.example.debttracker.data.PreferencesManager
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -46,6 +51,11 @@ fun FriendInfoScreen(
     friendId: String,
     loginViewModel: LoginViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val preferencesManager = remember { PreferencesManager(context) }
+    val userCurrency by preferencesManager.userCurrency.collectAsState(initial = "USD")
+    val currencySymbol = getCurrencySymbol(userCurrency)
+    
     val scrollState = rememberScrollState()
     val storedUser by loginViewModel.storedUser.observeAsState()
     val transactions = storedUser?.transactions?.get(friendId).orEmpty()
@@ -81,7 +91,7 @@ fun FriendInfoScreen(
                     modifier = Modifier.size(172.dp)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                ColorBalanceText(balance = friendBalance, fontSize = 56.sp)
+                ColorBalanceText(balance = friendBalance, currencySymbol = currencySymbol, fontSize = 56.sp)
                 Spacer(modifier = Modifier.height(16.dp))
                 CustomButton(
                     variant = ButtonVariant.LIME,
@@ -119,9 +129,9 @@ fun FriendInfoScreen(
                     val date = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
                         .format(txn.date)
                     val amt = if (txn.paidBy == currentUser?.uid)
-                        "+$${txn.amount}"
+                        "+$currencySymbol${txn.amount}"
                     else
-                        "-$${txn.amount}"
+                        "-$currencySymbol${txn.amount}"
                     TransactionField(date = date, amount = amt)
                 }
             }

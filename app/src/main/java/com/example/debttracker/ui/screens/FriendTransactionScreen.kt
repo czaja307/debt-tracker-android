@@ -25,6 +25,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -45,10 +46,15 @@ fun FriendTransactionScreen(
     navController: NavHostController,
     friendId: String,
     loginViewModel: LoginViewModel = viewModel(),
-    addDebtViewModel: AddDebtViewModel = viewModel(factory = ViewModelFactory(loginViewModel))
+    addDebtViewModel: AddDebtViewModel = viewModel(
+        factory = ViewModelFactory(
+            loginViewModel,
+            LocalContext.current
+        )
+    )
 ) {
     val amount by addDebtViewModel.amount.observeAsState("")
-    val currency by addDebtViewModel.currency.observeAsState("PLN")
+    val currency by addDebtViewModel.currency.observeAsState("USD") // Updated default to match preferences default
     val hasError by addDebtViewModel.hasError.observeAsState(false)
     val errorMessage by addDebtViewModel.errorMessage.observeAsState("")
     val successMessage by addDebtViewModel.successMessage.observeAsState("")
@@ -56,38 +62,38 @@ fun FriendTransactionScreen(
     val conversionRate by addDebtViewModel.conversionRate.observeAsState(1.0)
     val availableCurrencies = addDebtViewModel.availableCurrencies
     val isLoadingFriends by addDebtViewModel.isLoadingFriends.observeAsState(false)
-    
+
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val isLoading = remember { mutableStateOf(false) }
     val isSubmitting = remember { mutableStateOf(false) }
-    
+
     // Find friend email
     val friendEmail = remember(friendsWithEmails) {
         friendsWithEmails.find { it.first == friendId }?.second ?: ""
     }
-    
+
     // Find current user
     val currentUserInfo = remember(friendsWithEmails) {
         friendsWithEmails.find { it.second == "Me" }
     }
-    
+
     // Payment options specific to this friend transaction
     val paymentOptions = listOf("I paid for $friendEmail", "$friendEmail paid for me")
     var selectedOption by remember { mutableStateOf(paymentOptions[0]) }
-    
+
     // Effects
     LaunchedEffect(Unit) {
         println("DEBUG: LaunchedEffect in FriendTransactionScreen triggered for friendId: $friendId")
         addDebtViewModel.resetState()
-        
+
         // First ensure we have the latest user data with friends list
         loginViewModel.refreshUserData()
-        
+
         // Give time for the data to be fetched and then load friends
         kotlinx.coroutines.delay(500)
         addDebtViewModel.loadFriendsWithEmails()
-        
+
         // Set friend ID immediately without waiting for user selection
         loginViewModel.currentUser.value?.let { user ->
             // Default to "I paid for friend" scenario
@@ -96,7 +102,7 @@ fun FriendTransactionScreen(
             addDebtViewModel.indebted.value = friendId
         }
     }
-    
+
     LaunchedEffect(currency) {
         if (currency != "PLN") {
             isLoading.value = true
@@ -104,7 +110,7 @@ fun FriendTransactionScreen(
             isLoading.value = false
         }
     }
-    
+
     LaunchedEffect(hasError, errorMessage, successMessage) {
         if (hasError && errorMessage.isNotEmpty()) {
             scope.launch {
@@ -146,7 +152,8 @@ fun FriendTransactionScreen(
                     value = amount,
                     onValueChange = { addDebtViewModel.amount.value = it },
                     label = "Enter an amount",
-                    placeholder = "$0.00",
+                    placeholder = "0.00",
+                    currency = currency,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -157,7 +164,7 @@ fun FriendTransactionScreen(
                     onOptionSelected = { addDebtViewModel.currency.value = it },
                     modifier = Modifier.fillMaxWidth()
                 )
-                
+
                 if (isLoading.value) {
                     CircularProgressIndicator()
                     Spacer(modifier = Modifier.height(8.dp))

@@ -26,6 +26,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,10 +47,10 @@ import kotlinx.coroutines.launch
 fun NewTransactionScreen(
     navController: NavHostController,
     loginViewModel: LoginViewModel = viewModel(),
-    addDebtViewModel: AddDebtViewModel = viewModel(factory = ViewModelFactory(loginViewModel))
+    addDebtViewModel: AddDebtViewModel = viewModel(factory = ViewModelFactory(loginViewModel, LocalContext.current))
 ) {
     val amount by addDebtViewModel.amount.observeAsState("")
-    val currency by addDebtViewModel.currency.observeAsState("PLN")
+    val currency by addDebtViewModel.currency.observeAsState("USD") // Updated default to match preferences default
     val paysId by addDebtViewModel.pays.observeAsState("")
     val indebtedId by addDebtViewModel.indebted.observeAsState("")
     val hasError by addDebtViewModel.hasError.observeAsState(false)
@@ -138,7 +139,8 @@ fun NewTransactionScreen(
                     value = amount,
                     onValueChange = { addDebtViewModel.amount.value = it },
                     label = "Enter an amount",
-                    placeholder = "$0.00",
+                    placeholder = "0.00",
+                    currency = currency,
                     modifier = Modifier.fillMaxWidth()
                 )
 

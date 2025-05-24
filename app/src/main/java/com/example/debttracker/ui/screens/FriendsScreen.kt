@@ -15,6 +15,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -22,6 +23,7 @@ import com.example.debttracker.R
 import com.example.debttracker.ui.components.CustomButton
 import com.example.debttracker.ui.components.CustomText
 import com.example.debttracker.ui.components.FriendField
+import com.example.debttracker.ui.components.getCurrencySymbol
 import com.example.debttracker.ui.components.GlobalTopAppBar
 import com.example.debttracker.ui.theme.AppBackgroundColor
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -30,6 +32,9 @@ import androidx.compose.runtime.livedata.observeAsState
 import com.example.debttracker.models.User
 import com.example.debttracker.viewmodels.LoginViewModel
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import com.example.debttracker.data.PreferencesManager
 
 // Local model for displaying friends
 data class FriendDisplay(
@@ -41,6 +46,11 @@ data class FriendDisplay(
 
 @Composable
 fun FriendsScreen(navController: NavHostController, loginViewModel: LoginViewModel = viewModel()) {
+    val context = LocalContext.current
+    val preferencesManager = remember { PreferencesManager(context) }
+    val userCurrency by preferencesManager.userCurrency.collectAsState(initial = "USD")
+    val currencySymbol = getCurrencySymbol(userCurrency)
+    
     Scaffold(
         modifier = Modifier.background(AppBackgroundColor),
         topBar = { GlobalTopAppBar(navController) },
@@ -97,7 +107,7 @@ fun FriendsScreen(navController: NavHostController, loginViewModel: LoginViewMod
                     }
                 } else {
                     friendDisplays.forEach { friend ->
-                        FriendField(friend = friend, navController = navController)
+                        FriendField(friend = friend, navController = navController, currencySymbol = currencySymbol)
                     }
                 }
             }

@@ -97,6 +97,7 @@ fun TransactionField(date: String, amount: String, modifier: Modifier = Modifier
 fun FriendField(
     friend: FriendDisplay,
     navController: NavHostController,
+    currencySymbol: String = "$",
     modifier: Modifier = Modifier
 ) {
     val painter = if (friend.imageRes != null)
@@ -138,7 +139,7 @@ fun FriendField(
                     text = friend.name,
                     fontSize = 16.sp
                 )
-                ColorBalanceText(balance = friend.balance)
+                ColorBalanceText(balance = friend.balance, currencySymbol = currencySymbol)
             }
         }
     }
@@ -401,7 +402,7 @@ fun CustomEnumPickField(
 
 // g) BalanceField – pole wyświetlające bilans (tekst po lewej i kwotę po prawej, kolor zależny od wartości)
 @Composable
-fun BalanceField(label: String, balance: Float, modifier: Modifier = Modifier) {
+fun BalanceField(label: String, balance: Float, currencySymbol: String = "$", modifier: Modifier = Modifier) {
     //val label = if (balance >= 0) "People owe you:" else "You owe people:"
     //val balanceColor = if (balance >= 0) Color.Green else Color.Red
     val balanceColor = TextPrimary
@@ -420,7 +421,7 @@ fun BalanceField(label: String, balance: Float, modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(text = label, color = TextPrimary)
-            Text(text = balance.toString(), color = balanceColor)
+            Text(text = "$currencySymbol${"%.2f".format(balance)}", color = balanceColor)
         }
     }
 }
@@ -443,13 +444,26 @@ fun CustomText(
     )
 }
 
-// i) CustomNumberTextField - textfield z etykietą i ograniczeniem do cyfr
+// Helper function to get currency symbol
+fun getCurrencySymbol(currency: String): String {
+    return when (currency) {
+        "USD" -> "$"
+        "EUR" -> "€"
+        "GBP" -> "£"
+        "PLN" -> "PLN"
+        "CZK" -> "Kč"
+        else -> "$"
+    }
+}
+
+// i) CustomNumberTextField - textfield with label and digit restrictions
 @Composable
 fun CustomNumberField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
     placeholder: String,
+    currency: String = "USD",
     modifier: Modifier = Modifier
 ) {
     val textFieldBackground = TilePrimary
@@ -484,10 +498,10 @@ fun CustomNumberField(
                 disabledLabelColor = Color.Gray
             ),
             shape = RoundedCornerShape(ComponentCornerRadiusSmall),
-            // Format with currency symbol based on focus state
+            // Format with currency symbol based on selected currency
             prefix = {
                 Text(
-                    text = "$",
+                    text = getCurrencySymbol(currency),
                     color = TextPrimary
                 )
             }
@@ -593,9 +607,9 @@ fun CustomBottomSheetScaffold(
 
 // l) ColorBalanceText - tekst z kolorem zależnym od wartości
 @Composable
-fun ColorBalanceText(balance: Float, fontSize: TextUnit = 32.sp) {
+fun ColorBalanceText(balance: Float, currencySymbol: String = "$", fontSize: TextUnit = 32.sp) {
     val formattedBalance = String.format("%.2f", abs(balance))
-    val balanceText = if (balance >= 0) "+$$formattedBalance" else "-$$formattedBalance"
+    val balanceText = if (balance >= 0) "+$currencySymbol$formattedBalance" else "-$currencySymbol$formattedBalance"
     val balanceColor = if (balance >= 0f) Color.Green else Color.Red
 
     CustomText(

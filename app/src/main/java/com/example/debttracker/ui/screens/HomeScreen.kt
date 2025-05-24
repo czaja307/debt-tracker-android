@@ -29,14 +29,23 @@ import com.example.debttracker.viewmodels.LoginViewModel
 import kotlin.math.absoluteValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import java.text.SimpleDateFormat
 import java.util.Locale
+import androidx.compose.ui.platform.LocalContext
+import com.example.debttracker.data.PreferencesManager
+import com.example.debttracker.ui.components.getCurrencySymbol
 
 @Composable
 fun HomeScreen(
     navController: NavHostController,
     loginViewModel: LoginViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val preferencesManager = remember { PreferencesManager(context) }
+    val userCurrency by preferencesManager.userCurrency.collectAsState(initial = "USD")
+    val currencySymbol = getCurrencySymbol(userCurrency)
+    
     val scrollState = rememberScrollState()
     // Observe stored user and compute real balances
     val storedUser by loginViewModel.storedUser.observeAsState()
@@ -70,7 +79,7 @@ fun HomeScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 CustomText(
-                    text = if (totalYouOwe > 0f) "-$${"%.2f".format(totalYouOwe)}" else "$0.00",
+                    text = if (totalYouOwe > 0f) "-${currencySymbol}${"%.2f".format(totalYouOwe)}" else "${currencySymbol}0.00",
                     fontSize = 64.sp
                 )
             }
@@ -126,11 +135,11 @@ fun HomeScreen(
                     .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                BalanceField("People owe you", balance = totalOwedToMe)
+                BalanceField("People owe you", balance = totalOwedToMe, currencySymbol = currencySymbol)
                 DebtOverTimeGraph(data = historyData)
-                DebtPieChart(dataPieChart, "Current debt")
-                BalanceField("My total debt", balance = totalYouOwe)
-                BalanceField("Total debt to me", balance = totalOwedToMe)
+                DebtPieChart(dataPieChart, "Current debt", currencySymbol = currencySymbol)
+                BalanceField("My total debt", balance = totalYouOwe, currencySymbol = currencySymbol)
+                BalanceField("Total debt to me", balance = totalOwedToMe, currencySymbol = currencySymbol)
             }
         },
     )
