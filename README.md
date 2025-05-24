@@ -37,12 +37,12 @@
 
 #### `AppNavigationTest.kt` (Application Navigation Flows)
 
-| Test Case                                                           | Description                                                                                                                                 |
-|:--------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------|
-| `appLaunches_and_homeScreenIsVisible`                               | Verifies that the application launches correctly and the `HomeScreen` (identified by "You owe" text) is displayed.                          |
-| `navigateToFriendsScreen_fromBottomNav`                             | Tests navigation from the `HomeScreen` to the `FriendsScreen` using the bottom navigation bar.                                              |
-| `navigateToProfileSettings_fromTopAppBar_showsLoginScreenInitially` | Tests navigation to the profile/settings area (which shows `LoginScreen` if not logged in) by clicking the profile icon in the top app bar. |
-| `navigateToNewTransactionScreen_fromBottomNav`                      | Tests navigation from the `HomeScreen` to the `NewTransactionScreen` using the "New Transaction" button in the bottom navigation bar.       |
+| Test Case                                         | Description                                                                                                                      |
+|:--------------------------------------------------|:---------------------------------------------------------------------------------------------------------------------------------|
+| `aa_loginScreen_performsLoginSuccessfully`         | Verifies that the login screen is displayed, performs a login, and checks that the home screen ("You owe") is shown after login.  |
+| `appLaunches_and_homeScreenIsVisible`             | Verifies that the application launches correctly and the `HomeScreen` (identified by "You owe" text) is displayed.               |
+| `navigateToFriendsScreen_fromBottomNav`           | Tests navigation from the `HomeScreen` to the `FriendsScreen` using the bottom navigation bar.                                     |
+| `navigateToNewTransactionScreen_fromBottomNav`    | Tests navigation from the `HomeScreen` to the `NewTransactionScreen` using the bottom navigation bar.                             |
 
 #### `PerformanceTest.java` (API and Database Performance)
 
