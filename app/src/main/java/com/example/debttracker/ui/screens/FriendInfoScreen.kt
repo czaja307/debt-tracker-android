@@ -123,8 +123,8 @@ fun FriendInfoScreen(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
-                // Display actual transactions
-                transactions.forEach { txn ->
+                // Display actual transactions sorted by most recent first
+                transactions.sortedByDescending { it.date.time }.forEach { txn ->
                     // Format transaction date and amount using current user state
                     val date = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
                         .format(txn.date)
