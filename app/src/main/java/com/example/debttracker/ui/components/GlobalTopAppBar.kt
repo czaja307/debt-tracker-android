@@ -65,7 +65,7 @@ fun GlobalTopAppBar(navController: NavHostController) {
             Image(
                 painter = painterResource(id = R.drawable.app_logo),
                 contentDescription = "App Logo",
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(80.dp)
             )
         },
         actions = {
@@ -76,7 +76,7 @@ fun GlobalTopAppBar(navController: NavHostController) {
                         contentDescription = "Profile",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(80.dp)
                             .clip(CircleShape)
                     )
                 } else {
