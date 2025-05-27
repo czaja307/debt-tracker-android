@@ -47,6 +47,8 @@ class LoginViewModel(
     val showSignupView = MutableLiveData(false)
     val totalBalance = MutableLiveData(0.0)
     val friendEmail = MutableLiveData("")
+    val myTotalDebt = MutableLiveData(0.0) // Added for sum of what current user owes
+    val totalDebtToMe = MutableLiveData(0.0) // Added for sum of what is owed to current user
 
     private val authStateListener = FirebaseAuth.AuthStateListener { firebaseAuth ->
         val user = firebaseAuth.currentUser
@@ -260,41 +262,69 @@ class LoginViewModel(
         }
     }
 
-    fun addTransaction(friendUID: String, amount: Double, paidBy: String) {
+    fun addTransaction(debtorUID: String, amount: Double, payerUID: String) {
         viewModelScope.launch {
             try {
-                val current = _currentUser.value?.uid ?: return@launch
-                val userRef = db.collection("users").document(current)
-                val friendRef = db.collection("users").document(friendUID)
-                val data = mapOf(
-                    "amount" to amount,
-                    "date" to Timestamp(Date()),
-                    "paidBy" to paidBy
-                )
-                val transaction = Transaction.fromMap(data) ?: return@launch
+                hasError.postValue(false)
 
-                userRef.update(
-                    "transactions.$friendUID",
-                    FieldValue.arrayUnion(transaction.toMap())
-                ).await()
-                friendRef.update(
-                    "transactions.$current",
-                    FieldValue.arrayUnion(transaction.toMap())
-                ).await()
-
-                _storedUser.value?.let { user ->
-                    val updatedTransactions = user.transactions.toMutableMap()
-                    val currentList =
-                        updatedTransactions[friendUID]?.toMutableList() ?: mutableListOf()
-                    currentList.add(transaction)
-                    // Sort by date descending (newest first)
-                    val sortedList = currentList.sortedByDescending { it.date.time }
-                    updatedTransactions[friendUID] = sortedList
-                    _storedUser.postValue(user.copy(transactions = updatedTransactions))
+                if (debtorUID.isEmpty() || payerUID.isEmpty()) {
+                    errorMessage.postValue("Debtor or Payer UID is empty.")
+                    hasError.postValue(true)
+                    return@launch
                 }
+
+                if (debtorUID == payerUID) {
+                    errorMessage.postValue("Payer and debtor cannot be the same person for a debt.")
+                    hasError.postValue(true)
+                    return@launch
+                }
+
+                val payerDocRef = db.collection("users").document(payerUID)
+                val debtorDocRef = db.collection("users").document(debtorUID)
+
+                val transactionData = mapOf(
+                    "amount" to amount, // This is amountInPLN
+                    "date" to Timestamp(Date()),
+                    "paidBy" to payerUID
+                )
+                val transaction = Transaction.fromMap(transactionData) ?: run {
+                    errorMessage.postValue("Failed to create transaction object.")
+                    hasError.postValue(true)
+                    return@launch
+                }
+
+                // Update payer's document: transaction is with debtorUID
+                payerDocRef.update("transactions.$debtorUID", FieldValue.arrayUnion(transaction.toMap()))
+                    .await()
+
+                // Update debtor's document: transaction is with payerUID
+                debtorDocRef.update("transactions.$payerUID", FieldValue.arrayUnion(transaction.toMap()))
+                    .await()
+
+                // Update local _storedUser if the current user is involved
+                val currentUserUID = _currentUser.value?.uid
+                if (currentUserUID == payerUID || currentUserUID == debtorUID) {
+                    _storedUser.value?.let { user ->
+                        val otherPartyUID = if (currentUserUID == payerUID) debtorUID else payerUID
+                        val updatedTransactions = user.transactions.toMutableMap()
+                        val currentList = updatedTransactions[otherPartyUID]?.toMutableList() ?: mutableListOf()
+                        
+                        // Avoid adding duplicate if already present (e.g. from Firestore listener)
+                        if (!currentList.any { it.date == transaction.date && it.amount == transaction.amount && it.paidBy == transaction.paidBy }) {
+                            currentList.add(transaction)
+                        }
+                        val sortedList = currentList.sortedByDescending { it.date.time }
+                        updatedTransactions[otherPartyUID] = sortedList
+                        _storedUser.postValue(user.copy(transactions = updatedTransactions))
+                    }
+                }
+                // Optionally, trigger a broader refresh or specific balance updates if needed
+                // refreshUserData() // This might be too broad; consider more targeted updates.
+
             } catch (e: Exception) {
                 hasError.postValue(true)
                 errorMessage.postValue(e.localizedMessage ?: "Error while adding transaction")
+                println("DEBUG: Error adding transaction: ${e.message}")
             }
         }
     }
@@ -376,30 +406,45 @@ class LoginViewModel(
                                 println("DEBUG: Friends list: ${userWithData.friends}")
                                 _storedUser.postValue(userWithData)
                                 
-                                // Calculate total balance in PLN
+                                // Calculate total balance, my total debt, and total debt to me in PLN
                                 var totalPLN = 0.0
+                                var myTotalDebtPLN = 0.0
+                                var totalDebtToMePLN = 0.0
+                                val currentUserUID = userWithData.uid
+
                                 userWithData.friends.forEach { friendId ->
-                                    // Use calculateBalance which already handles the direction correctly
-                                    // but returns in the preferred currency, so we need the PLN version
                                     val friendTransactions = userWithData.transactions[friendId] ?: emptyList()
-                                    var friendBalance = 0.0
+                                    var individualFriendBalancePLN = 0.0
                                     
-                                    // Direct calculation in PLN
                                     friendTransactions.forEach { transaction ->
-                                        if (transaction.paidBy == uid) {
-                                            friendBalance += transaction.amount
-                                        } else {
-                                            friendBalance -= transaction.amount
+                                        if (transaction.paidBy == currentUserUID) { // Current user paid, friend owes current user
+                                            individualFriendBalancePLN += transaction.amount
+                                        } else { // Friend paid, current user owes friend
+                                            individualFriendBalancePLN -= transaction.amount
                                         }
                                     }
                                     
-                                    totalPLN += friendBalance
+                                    totalPLN += individualFriendBalancePLN // Net balance with this friend
+
+                                    if (individualFriendBalancePLN > 0) { // Friend owes current user this much
+                                        totalDebtToMePLN += individualFriendBalancePLN
+                                    } else if (individualFriendBalancePLN < 0) { // Current user owes friend this much
+                                        myTotalDebtPLN += -individualFriendBalancePLN // Add the absolute amount of debt
+                                    }
                                 }
                                 
-                                // Convert total balance to preferred currency
+                                // Convert sums to preferred currency
                                 val convertedTotal = convertCurrency(totalPLN, "PLN", preferredCurrency)
+                                val convertedMyTotalDebt = convertCurrency(myTotalDebtPLN, "PLN", preferredCurrency)
+                                val convertedTotalDebtToMe = convertCurrency(totalDebtToMePLN, "PLN", preferredCurrency)
+
                                 totalBalance.postValue(convertedTotal)
-                                println("DEBUG: Total balance: $totalPLN PLN -> $convertedTotal $preferredCurrency")
+                                myTotalDebt.postValue(convertedMyTotalDebt)
+                                totalDebtToMe.postValue(convertedTotalDebtToMe)
+
+                                println("DEBUG: Total Balance: $totalPLN PLN -> $convertedTotal $preferredCurrency")
+                                println("DEBUG: My Total Debt: $myTotalDebtPLN PLN -> $convertedMyTotalDebt $preferredCurrency")
+                                println("DEBUG: Total Debt To Me: $totalDebtToMePLN PLN -> $convertedTotalDebtToMe $preferredCurrency")
                                 
                             } ?: println("DEBUG: Failed to create FirestoreUser from data")
                         } ?: println("DEBUG: User document data is null")

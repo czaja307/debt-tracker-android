@@ -45,6 +45,8 @@ fun HomeScreen(
     val userCurrency by preferencesManager.userCurrency.collectAsState(initial = "USD")
     val currencySymbol = getCurrencySymbol(userCurrency)
     val totalBalance by loginViewModel.totalBalance.observeAsState(0.0)
+    val myTotalDebt by loginViewModel.myTotalDebt.observeAsState(0.0)
+    val totalDebtToMe by loginViewModel.totalDebtToMe.observeAsState(0.0)
     
     // Fetch latest data when the screen is shown
     LaunchedEffect(Unit) {
@@ -80,11 +82,11 @@ fun HomeScreen(
             
             val dataPieChart = mapOf(
                 "To me" to PieChartData.Slice(
-                    value = positiveBalance,
+                    value = totalDebtToMe.toFloat(), // Use totalDebtToMe for pie chart slice
                     color = Color(0xFF3B4C00)  // Darker green
                 ),
                 "I owe" to PieChartData.Slice(
-                    value = negativeBalance,
+                    value = myTotalDebt.toFloat(), // Use myTotalDebt for pie chart slice
                     color = Color(0xFFB4DD1E)  // Lighter green
                 ),
             )
@@ -98,11 +100,9 @@ fun HomeScreen(
             ) {
                 BalanceField(
                     label = "Total debt to me", 
-                    balance = if (totalBalance > 0) totalBalance.toFloat() else 0f,
+                    balance = totalDebtToMe.toFloat(),
                     currencySymbol = currencySymbol
                 )
-                // Create a simple sample data map for the debt over time graph
-                // This should ideally come from the ViewModel with real debt history data
                 val timeData = mapOf(
                     "Jan" to 20f,
                     "Feb" to 35f,
@@ -110,17 +110,20 @@ fun HomeScreen(
                     "Apr" to kotlin.math.abs(totalBalance.toFloat())  // Current balance
                 )
                 DebtOverTimeGraph(data = timeData)
-                DebtPieChart(dataPieChart, "Current debt", currencySymbol)
+                DebtPieChart(dataPieChart, "Current debt distribution", currencySymbol) // Changed title for clarity
                 BalanceField(
                     label = "My total debt", 
-                    balance = if (totalBalance < 0) kotlin.math.abs(totalBalance.toFloat()) else 0f,
+                    balance = myTotalDebt.toFloat(),
                     currencySymbol = currencySymbol
                 )
+                /* This BalanceField might be redundant now or could show net positive if desired.
+                   For now, commenting out as "Total debt to me" shows the gross amount.
                 BalanceField(
                     label = "People owe you", 
                     balance = if (totalBalance > 0) totalBalance.toFloat() else 0f,
                     currencySymbol = currencySymbol
                 )
+                */
                 //TransactionField(date = "2025-04-08", amount = "$50.00")
                 //CustomButton(icon = Icons.Filled.Info, text = "Test Button")
                 //CustomTextField(label = "Description", text = textValue, onTextChange = { textValue = it })

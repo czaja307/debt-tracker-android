@@ -113,10 +113,19 @@ class AddDebtViewModel(
                     amountInPLN,
                     pays.value ?: ""
                 )
-                
-                // Clear fields and show success message
-                amount.postValue("")
-                successMessage.postValue("Transaction added successfully")
+
+                // Check if loginViewModel encountered an error
+                if (loginViewModel.hasError.value == true) {
+                    hasError.postValue(true)
+                    errorMessage.postValue(loginViewModel.errorMessage.value ?: "Transaction failed.")
+                } else {
+                    // Clear fields and show success message
+                    amount.postValue("")
+                    // Consider clearing indebted and pays fields if that's the desired UX, e.g.:
+                    // indebted.postValue("")
+                    // pays.postValue("")
+                    successMessage.postValue("Transaction added successfully")
+                }
             } catch (e: Exception) {
                 hasError.postValue(true)
                 errorMessage.postValue(e.localizedMessage ?: "Error adding transaction")

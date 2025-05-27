@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -51,6 +52,10 @@ fun FriendsScreen(navController: NavHostController, loginViewModel: LoginViewMod
     val preferencesManager = remember { PreferencesManager(context) }
     val userCurrency by preferencesManager.userCurrency.collectAsState(initial = "USD")
     val currencySymbol = getCurrencySymbol(userCurrency)
+
+    LaunchedEffect(Unit) {
+        loginViewModel.refreshUserData()
+    }
     
     Scaffold(
         modifier = Modifier.background(AppBackgroundColor),
