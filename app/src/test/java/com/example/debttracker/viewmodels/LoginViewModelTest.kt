@@ -1,7 +1,9 @@
 package com.example.debttracker.viewmodels
 
+import android.content.Context
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.MutableLiveData
+import com.example.debttracker.data.PreferencesManager
 import com.example.debttracker.models.FirestoreUser
 import com.example.debttracker.models.Transaction
 import com.example.debttracker.models.User
@@ -14,10 +16,12 @@ import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.whenever
+import org.mockito.kotlin.mock
 import java.util.Date
-import kotlinx.coroutines.test.runTest // Import for runTest
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -60,6 +64,9 @@ class LoginViewModelTest {
     @Mock
     private lateinit var mockDocumentReference: com.google.firebase.firestore.DocumentReference
 
+    @Mock
+    private lateinit var mockContext: Context
+
     // To capture and invoke AuthStateListener
     private var authStateListener: FirebaseAuth.AuthStateListener? = null
 
@@ -67,6 +74,8 @@ class LoginViewModelTest {
     fun setUp() {
         MockitoAnnotations.openMocks(this)
         Dispatchers.setMain(testDispatcher)
+        
+        // In tests, just create the ViewModel without a Context to avoid currency conversion
         viewModel = LoginViewModel(mockAuth, mockDb)
 
         // Capture the AuthStateListener when it's added
@@ -74,6 +83,7 @@ class LoginViewModelTest {
             authStateListener = it.arguments[0] as FirebaseAuth.AuthStateListener
             null
         }
+        
         // Initialize the listener by calling the init block again (or parts of it)
         // This is a bit of a workaround. A cleaner way would be to have a dedicated method to init listeners
         // or to make the listener accessible for invocation in tests.

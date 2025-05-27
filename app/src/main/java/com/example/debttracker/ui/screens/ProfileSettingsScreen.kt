@@ -74,10 +74,11 @@ import com.example.debttracker.ui.components.CustomText
 import com.example.debttracker.ui.components.CustomTextField
 import com.example.debttracker.ui.components.CustomUserAvatar
 import com.example.debttracker.ui.theme.AppBackgroundColor
+import com.example.debttracker.viewmodels.ViewModelFactory
 
 
 @Composable
-fun ProfileContent(navController: NavHostController, loginViewModel: LoginViewModel = viewModel()) {
+fun ProfileContent(navController: NavHostController, loginViewModel: LoginViewModel = viewModel(factory = ViewModelFactory(context = LocalContext.current))) {
     val context = LocalContext.current
     val preferencesManager = remember { PreferencesManager(context) }
     val coroutineScope = rememberCoroutineScope()

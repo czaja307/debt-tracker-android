@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -27,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.debttracker.ui.components.BackTopAppBar
@@ -45,16 +44,12 @@ import kotlinx.coroutines.launch
 fun FriendTransactionScreen(
     navController: NavHostController,
     friendId: String,
-    loginViewModel: LoginViewModel = viewModel(),
-    addDebtViewModel: AddDebtViewModel = viewModel(
-        factory = ViewModelFactory(
-            loginViewModel,
-            LocalContext.current
-        )
-    )
+    loginViewModel: LoginViewModel = viewModel(factory = ViewModelFactory(context = LocalContext.current)),
+    addDebtViewModel: AddDebtViewModel = viewModel(factory = ViewModelFactory(loginViewModel, LocalContext.current))
 ) {
     val amount by addDebtViewModel.amount.observeAsState("")
-    val currency by addDebtViewModel.currency.observeAsState("USD") // Updated default to match preferences default
+    val currency by addDebtViewModel.currency.observeAsState("USD")
+    val paysId by addDebtViewModel.pays.observeAsState("")
     val hasError by addDebtViewModel.hasError.observeAsState(false)
     val errorMessage by addDebtViewModel.errorMessage.observeAsState("")
     val successMessage by addDebtViewModel.successMessage.observeAsState("")
@@ -62,47 +57,29 @@ fun FriendTransactionScreen(
     val conversionRate by addDebtViewModel.conversionRate.observeAsState(1.0)
     val availableCurrencies = addDebtViewModel.availableCurrencies
     val isLoadingFriends by addDebtViewModel.isLoadingFriends.observeAsState(false)
-
+    
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val isLoading = remember { mutableStateOf(false) }
     val isSubmitting = remember { mutableStateOf(false) }
-
-    // Find friend email
-    val friendEmail = remember(friendsWithEmails) {
-        friendsWithEmails.find { it.first == friendId }?.second ?: ""
-    }
-
-    // Find current user
-    val currentUserInfo = remember(friendsWithEmails) {
-        friendsWithEmails.find { it.second == "Me" }
-    }
-
-    // Payment options specific to this friend transaction
-    val paymentOptions = listOf("I paid for $friendEmail", "$friendEmail paid for me")
-    var selectedOption by remember { mutableStateOf(paymentOptions[0]) }
-
+    
+    // Find friend's email for display
+    val friendEmail = friendsWithEmails.find { it.first == friendId }?.second ?: "Loading..."
+    val currentUserEmail = loginViewModel.currentUser.value?.email ?: "Me"
+    
     // Effects
     LaunchedEffect(Unit) {
-        println("DEBUG: LaunchedEffect in FriendTransactionScreen triggered for friendId: $friendId")
+        println("DEBUG: LaunchedEffect in FriendTransactionScreen triggered")
         addDebtViewModel.resetState()
-
+        
         // First ensure we have the latest user data with friends list
         loginViewModel.refreshUserData()
-
+        
         // Give time for the data to be fetched and then load friends
         kotlinx.coroutines.delay(500)
         addDebtViewModel.loadFriendsWithEmails()
-
-        // Set friend ID immediately without waiting for user selection
-        loginViewModel.currentUser.value?.let { user ->
-            // Default to "I paid for friend" scenario
-            println("DEBUG: Setting default transaction participants - currentUser: ${user.uid}, friend: $friendId")
-            addDebtViewModel.pays.value = user.uid
-            addDebtViewModel.indebted.value = friendId
-        }
     }
-
+    
     LaunchedEffect(currency) {
         if (currency != "PLN") {
             isLoading.value = true
@@ -110,7 +87,7 @@ fun FriendTransactionScreen(
             isLoading.value = false
         }
     }
-
+    
     LaunchedEffect(hasError, errorMessage, successMessage) {
         if (hasError && errorMessage.isNotEmpty()) {
             scope.launch {
@@ -128,96 +105,98 @@ fun FriendTransactionScreen(
                     message = successMessage,
                     duration = SnackbarDuration.Short
                 )
-                // Navigate back on success
+                // Navigate back on success after a slight delay
+                kotlinx.coroutines.delay(1000)
                 isSubmitting.value = false
                 navController.navigateUp()
             }
         }
     }
-
+    
     Scaffold(
         modifier = Modifier.background(AppBackgroundColor),
+        containerColor = AppBackgroundColor,
         topBar = { BackTopAppBar("Transaction with $friendEmail", navController) },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        content = { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            if (isLoadingFriends) {
+                CircularProgressIndicator()
+                CustomText(
+                    text = "Loading friend data...",
+                    fontSize = 16.sp
+                )
+            } else {
+                // Amount input with currency
+                CustomText(
+                    text = "Enter Transaction Amount",
+                    fontSize = 18.sp,
+                    modifier = Modifier.align(Alignment.Start)
+                )
                 CustomNumberField(
                     value = amount,
                     onValueChange = { addDebtViewModel.amount.value = it },
-                    label = "Enter an amount",
-                    placeholder = "0.00",
-                    currency = currency,
-                    modifier = Modifier.fillMaxWidth()
+                    label = "Amount",
+                    placeholder = "Enter amount"
                 )
-
+                
+                // Currency selection
                 CustomEnumPickField(
-                    label = "Choose Currency",
+                    label = "Currency",
                     options = availableCurrencies,
                     selectedOption = currency,
-                    onOptionSelected = { addDebtViewModel.currency.value = it },
-                    modifier = Modifier.fillMaxWidth()
+                    onOptionSelected = { addDebtViewModel.currency.value = it }
                 )
-
-                if (isLoading.value) {
-                    CircularProgressIndicator()
-                    Spacer(modifier = Modifier.height(8.dp))
-                    CustomText(text = "Fetching conversion rate...")
-                } else if (currency != "PLN") {
-                    CustomText(text = "Conversion rate to PLN: $conversionRate")
-                }
-
-                if (isLoadingFriends) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.height(8.dp))
-                        CustomText(text = "Loading friends...")
+                
+                // Who paid selection (limited to current user and this friend)
+                CustomText(
+                    text = "Who paid?",
+                    fontSize = 18.sp,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+                
+                val payerOptions = listOf(currentUserEmail, friendEmail)
+                CustomEnumPickField(
+                    label = "Paid by",
+                    options = payerOptions,
+                    selectedOption = if (paysId == friendId) friendEmail else currentUserEmail,
+                    onOptionSelected = { 
+                        // Set the actual ID, not the email
+                        if (it == friendEmail) {
+                            addDebtViewModel.pays.value = friendId
+                        } else {
+                            addDebtViewModel.pays.value = loginViewModel.currentUser.value?.uid ?: ""
+                        }
+                        // Also set the indebted to the opposite person
+                        if (it == friendEmail) {
+                            addDebtViewModel.indebted.value = loginViewModel.currentUser.value?.uid ?: ""
+                        } else {
+                            addDebtViewModel.indebted.value = friendId
+                        }
                     }
-                } else {
-                    CustomEnumPickField(
-                        label = "Payment Direction",
-                        options = paymentOptions,
-                        selectedOption = selectedOption,
-                        onOptionSelected = { selected ->
-                            selectedOption = selected
-                            // Set the payer and indebted based on selection
-                            currentUserInfo?.let { (currentUserId, _) ->
-                                if (selected == paymentOptions[0]) {
-                                    // I paid for friend
-                                    addDebtViewModel.pays.value = currentUserId
-                                    addDebtViewModel.indebted.value = friendId
-                                } else {
-                                    // Friend paid for me
-                                    addDebtViewModel.pays.value = friendId
-                                    addDebtViewModel.indebted.value = currentUserId
-                                }
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    CustomButton(
-                        variant = ButtonVariant.LIME,
-                        icon = Icons.Default.Add,
-                        text = if (isSubmitting.value) "Adding..." else "Add Transaction",
-                        onClick = {
-                            isSubmitting.value = true
-                            addDebtViewModel.addTransaction()
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isSubmitting.value
-                    )
-                }
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                CustomButton(
+                    variant = ButtonVariant.LIME,
+                    text = "Add Transaction",
+                    enabled = !isLoading.value && amount.isNotEmpty() && paysId.isNotEmpty(),
+                    modifier = Modifier.fillMaxWidth(0.7f),
+                    onClick = {
+                        isSubmitting.value = true
+                        addDebtViewModel.addTransaction()
+                        loginViewModel.refreshUserData()
+                    }
+                )
             }
         }
-    )
+    }
 }

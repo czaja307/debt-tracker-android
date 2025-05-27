@@ -46,7 +46,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun NewTransactionScreen(
     navController: NavHostController,
-    loginViewModel: LoginViewModel = viewModel(),
+    loginViewModel: LoginViewModel = viewModel(factory = ViewModelFactory(context = LocalContext.current)),
     addDebtViewModel: AddDebtViewModel = viewModel(factory = ViewModelFactory(loginViewModel, LocalContext.current))
 ) {
     val amount by addDebtViewModel.amount.observeAsState("")

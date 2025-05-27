@@ -1,201 +1,282 @@
 package com.example.debttracker.viewmodels
 
+import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.debttracker.data.PreferencesManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
-import androidx.lifecycle.asFlow
-import kotlinx.coroutines.flow.filterNotNull
-import android.content.Context
-import com.example.debttracker.data.PreferencesManager
-import kotlinx.coroutines.flow.first
 
 /**
- * ViewModel for adding transactions between users
- * Handles form validation, currency conversion, and transaction creation
+ * ViewModel for handling debt transactions with currency conversion
  */
 class AddDebtViewModel(
     private val loginViewModel: LoginViewModel,
-    private val context: Context
+    private val context: Context? = null
 ) : ViewModel() {
-    val pays = MutableLiveData<String>()
-    val indebted = MutableLiveData<String>()
+
+    private val preferencesManager by lazy { context?.let { PreferencesManager(it) } }
+    private val apiKey: String = "fca_live_9r3DTzOKWo8YyvDndrpNu9Rl2rELohMD3VuxJBOj"
+    
     val amount = MutableLiveData("")
-    val currency = MutableLiveData("USD") // Default will be updated from preferences
+    val currency = MutableLiveData("PLN")
+    val pays = MutableLiveData("")
+    val indebted = MutableLiveData("")
+    val conversionRate = MutableLiveData(1.0)
     val hasError = MutableLiveData(false)
     val errorMessage = MutableLiveData("")
     val successMessage = MutableLiveData("")
-    val conversionRate = MutableLiveData(1.0)
     val friendsWithEmails = MutableLiveData<List<Pair<String, String>>>(emptyList())
-    val isLoadingFriends = MutableLiveData(false)
-    
-    private val preferencesManager = PreferencesManager(context)
     val availableCurrencies = listOf("PLN", "USD", "EUR", "GBP", "CZK")
-    private val apiKey: String = "fca_live_9r3DTzOKWo8YyvDndrpNu9Rl2rELohMD3VuxJBOj"
-    
+    val isLoadingFriends = MutableLiveData(false)
+
     init {
-        println("DEBUG: AddDebtViewModel init called")
-        // Load user's preferred currency
         viewModelScope.launch {
-            val preferredCurrency = preferencesManager.userCurrency.first()
-            currency.value = preferredCurrency
-            println("DEBUG: Setting default currency to: $preferredCurrency")
-        }
-        
-        viewModelScope.launch {
-            // Wait a bit to make sure the LoginViewModel has loaded its data
-            kotlinx.coroutines.delay(500)
-            loadFriendsWithEmails()
-        }
-        // Reload friends list whenever storedUser is updated
-        viewModelScope.launch {
-            loginViewModel.storedUser.asFlow()
-                .filterNotNull()
-                .collect {
-                    loadFriendsWithEmails()
-                }
+            loadCurrency()
+            loadFriends()
         }
     }
-    
+
     /**
-     * Loads the current user and their friends with email addresses
-     * Used to populate dropdown menus for transaction participants
+     * Load user's preferred currency from preferences
      */
-    fun loadFriendsWithEmails() {
-        viewModelScope.launch {
-            isLoadingFriends.postValue(true)
-            val friendList = mutableListOf<Pair<String, String>>()
-
-            // Add current user as "Me"
-            loginViewModel.currentUser.value?.let { user ->
-                friendList.add(user.uid to "Me")
+    private suspend fun loadCurrency() {
+        context?.let { ctx ->
+            preferencesManager?.let { preferences ->
+                val savedCurrency = preferences.userCurrency.first()
+                currency.postValue(savedCurrency)
             }
-
-            // Use friends list from storedUser to populate friends
-            val friendUIDs = loginViewModel.storedUser.value?.friends.orEmpty()
-            friendUIDs.forEach { friendUID ->
-                val email = withContext(Dispatchers.IO) {
-                    loginViewModel.fetchUserEmail(friendUID)
-                }
-                friendList.add(friendUID to email)
-            }
-
-            friendsWithEmails.postValue(friendList)
-            isLoadingFriends.postValue(false)
         }
     }
     
     /**
-     * Fetches currency conversion rate from the API
-     * Converts selected currency to PLN which is the base currency for all transactions
+     * Load friends list with their emails
      */
-    fun fetchConversionRate() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val endpoint = "https://api.freecurrencyapi.com/v1/latest"
-                val urlString = "$endpoint?apikey=$apiKey&base_currency=${currency.value}&currencies=PLN"
-                
-                val url = URL(urlString)
-                val connection = url.openConnection() as HttpsURLConnection
-                connection.requestMethod = "GET"
-                
-                if (connection.responseCode == HttpsURLConnection.HTTP_OK) {
-                    val response = connection.inputStream.bufferedReader().use { it.readText() }
-                    val jsonObject = JSONObject(response)
-                    val dataObject = jsonObject.getJSONObject("data")
-                    val rate = dataObject.getDouble("PLN")
-                    
-                    withContext(Dispatchers.Main) {
-                        conversionRate.value = rate
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        hasError.value = true
-                        errorMessage.value = "API Error: ${connection.responseCode}"
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    hasError.value = true
-                    errorMessage.value = "Network Error: ${e.localizedMessage}"
-                }
+    private suspend fun loadFriends() {
+        try {
+            val friendIds = loginViewModel.getFriendsList()
+            val friendsWithEmails = friendIds.map { id ->
+                val email = loginViewModel.fetchUserEmail(id)
+                id to email
             }
+            this.friendsWithEmails.postValue(friendsWithEmails)
+        } catch (e: Exception) {
+            hasError.postValue(true)
+            errorMessage.postValue("Error loading friends: ${e.localizedMessage}")
         }
     }
     
     /**
-     * Validates and creates a new transaction between users
-     * Performs amount validation, user selection validation, and converts currency if needed
+     * Add a new transaction with proper currency conversion
      */
     fun addTransaction() {
-        val amountValue = amount.value?.toDoubleOrNull()
-        if (amountValue == null || amountValue <= 0) {
-            hasError.postValue(true)
-            errorMessage.postValue("Please enter a valid amount greater than zero")
-            return
-        }
-        
-        val paysValue = pays.value
-        val indebtedValue = indebted.value
-        if (paysValue.isNullOrEmpty() || indebtedValue.isNullOrEmpty()) {
-            hasError.postValue(true)
-            errorMessage.postValue("Please select a person")
-            return
-        }
-        
-        val isPayerCurrentUser = paysValue == loginViewModel.currentUser.value?.uid
-        val isIndebtedCurrentUser = indebtedValue == loginViewModel.currentUser.value?.uid
-        
-        if (isPayerCurrentUser == isIndebtedCurrentUser) {
-            hasError.postValue(true)
-            errorMessage.postValue("Invalid people assigned")
-            return
-        }
-        
-        val amountInPLN = amountValue * (conversionRate.value ?: 1.0)
-        val transactionUID = if (isPayerCurrentUser) indebtedValue else paysValue
-        
         viewModelScope.launch {
             try {
-                loginViewModel.addTransaction(transactionUID, amountInPLN, paysValue)
-                successMessage.postValue("Transaction added successfully!")
+                hasError.postValue(false)
                 
-                // Reset form fields for next use
-                amount.postValue("")
-                // Reset to user's preferred currency
-                viewModelScope.launch {
-                    val preferredCurrency = preferencesManager.userCurrency.first()
-                    currency.postValue(preferredCurrency)
+                // Validate input
+                val amountValue = amount.value?.toDoubleOrNull()
+                if (amountValue == null || amountValue <= 0) {
+                    hasError.postValue(true)
+                    errorMessage.postValue("Please enter a valid amount")
+                    return@launch
                 }
-                conversionRate.postValue(1.0)
+                
+                if (pays.value.isNullOrEmpty()) {
+                    hasError.postValue(true)
+                    errorMessage.postValue("Please select who paid")
+                    return@launch
+                }
+                
+                if (indebted.value.isNullOrEmpty()) {
+                    hasError.postValue(true)
+                    errorMessage.postValue("Please select who is indebted")
+                    return@launch
+                }
+                
+                // Convert to PLN for storage (app standardizes on PLN internally)
+                val amountInPLN = if (currency.value == "PLN") {
+                    amountValue
+                } else {
+                    convertToPLN(amountValue, currency.value ?: "PLN")
+                }
+                
+                // Add the transaction through LoginViewModel
+                loginViewModel.addTransaction(
+                    indebted.value ?: "",
+                    amountInPLN,
+                    pays.value ?: ""
+                )
+                
+                // Clear fields and show success message
+                amount.postValue("")
+                successMessage.postValue("Transaction added successfully")
             } catch (e: Exception) {
                 hasError.postValue(true)
-                errorMessage.postValue("Failed to add transaction: ${e.localizedMessage}")
+                errorMessage.postValue(e.localizedMessage ?: "Error adding transaction")
             }
         }
     }
     
     /**
-     * Resets all state variables to their initial values
-     * Should be called when initializing screens to prevent data leakage between sessions
+     * Convert amount from selected currency to PLN
+     */
+    private suspend fun convertToPLN(amount: Double, fromCurrency: String): Double {
+        return try {
+            val rates = withContext(Dispatchers.IO) {
+                fetchConversionRates("PLN")
+            }
+            
+            val rate = rates[fromCurrency]
+            if (rate != null) {
+                amount * rate
+            } else {
+                // Fallback conversion if API fails
+                val fallbackRate = when (fromCurrency) {
+                    "USD" -> 4.0
+                    "EUR" -> 4.35
+                    "GBP" -> 5.0
+                    "CZK" -> 0.175
+                    else -> 1.0 // Default to no conversion
+                }
+                amount * fallbackRate
+            }
+        } catch (e: Exception) {
+            // Fallback conversion if API fails
+            val fallbackRate = when (fromCurrency) {
+                "USD" -> 4.0
+                "EUR" -> 4.35
+                "GBP" -> 5.0
+                "CZK" -> 0.175
+                else -> 1.0 // Default to no conversion
+            }
+            amount * fallbackRate
+        }
+    }
+    
+    /**
+     * Fetch conversion rates from currency API
+     */
+    private suspend fun fetchConversionRates(baseCurrency: String): Map<String, Double> {
+        return try {
+            val endpoint = "https://api.freecurrencyapi.com/v1/latest"
+            val urlString = "$endpoint?apikey=$apiKey&base_currency=$baseCurrency&currencies=PLN,USD,EUR,GBP,CZK"
+            
+            val url = URL(urlString)
+            val connection = url.openConnection() as HttpsURLConnection
+            connection.requestMethod = "GET"
+            
+            if (connection.responseCode == HttpsURLConnection.HTTP_OK) {
+                val response = connection.inputStream.bufferedReader().use { it.readText() }
+                val jsonObject = JSONObject(response)
+                val dataObject = jsonObject.getJSONObject("data")
+                
+                val rates = mutableMapOf<String, Double>()
+                val currencies = listOf("PLN", "USD", "EUR", "GBP", "CZK")
+                currencies.forEach { currency ->
+                    if (dataObject.has(currency)) {
+                        rates[currency] = dataObject.getDouble(currency)
+                    }
+                }
+                rates
+            } else {
+                println("DEBUG: API Error: ${connection.responseCode}")
+                emptyMap()
+            }
+        } catch (e: Exception) {
+            println("DEBUG: Network Error when fetching rates: ${e.localizedMessage}")
+            emptyMap()
+        }
+    }
+    
+    /**
+     * Fetch conversion rate for selected currency
+     */
+    fun fetchConversionRate() {
+        viewModelScope.launch {
+            try {
+                val fromCurrency = currency.value ?: "PLN"
+                val rates = withContext(Dispatchers.IO) {
+                    fetchConversionRates(fromCurrency)
+                }
+                
+                // For conversion rate, we need PLN rate
+                val rate = rates["PLN"] ?: when (fromCurrency) {
+                    "USD" -> 4.0
+                    "EUR" -> 4.35
+                    "GBP" -> 5.0
+                    "CZK" -> 0.175
+                    else -> 1.0 // Default to no conversion
+                }
+                
+                conversionRate.postValue(rate)
+                println("DEBUG: Conversion rate set: $fromCurrency to PLN = $rate")
+            } catch (e: Exception) {
+                println("DEBUG: Error fetching conversion rate: ${e.localizedMessage}")
+                // Use fallback rates
+                val rate = when (currency.value) {
+                    "USD" -> 4.0
+                    "EUR" -> 4.35
+                    "GBP" -> 5.0
+                    "CZK" -> 0.175
+                    else -> 1.0 // Default to no conversion
+                }
+                conversionRate.postValue(rate)
+            }
+        }
+    }
+    
+    /**
+     * Reset the state of the ViewModel (clear errors, empty fields)
      */
     fun resetState() {
         amount.value = ""
-        // Reset to user's preferred currency
-        viewModelScope.launch {
-            val preferredCurrency = preferencesManager.userCurrency.first()
-            currency.value = preferredCurrency
-        }
         pays.value = ""
         indebted.value = ""
         hasError.value = false
         errorMessage.value = ""
         successMessage.value = ""
-        conversionRate.value = 1.0
+    }
+    
+    /**
+     * Load friends with their emails
+     * This is public to allow refresh from the UI
+     */
+    fun loadFriendsWithEmails() {
+        viewModelScope.launch {
+            try {
+                isLoadingFriends.postValue(true)
+                val friendIds = loginViewModel.getFriendsList()
+                val friendPairs = friendIds.map { id ->
+                    val email = loginViewModel.fetchUserEmail(id)
+                    id to email
+                }
+                // Add current user to the list
+                val currentUser = loginViewModel.currentUser.value
+                val currentUserEmail = currentUser?.email ?: "Me"
+                val currentUserUID = currentUser?.uid ?: ""
+
+                val allUsersForSelection = mutableListOf<Pair<String, String>>()
+                if (currentUserUID.isNotEmpty()) {
+                    allUsersForSelection.add(currentUserUID to "$currentUserEmail (Me)")
+                }
+                allUsersForSelection.addAll(friendPairs)
+
+                println("DEBUG: Loaded ${allUsersForSelection.size} users for transaction screen (including self)")
+                friendsWithEmails.postValue(allUsersForSelection)
+                isLoadingFriends.postValue(false)
+            } catch (e: Exception) {
+                println("DEBUG: Error loading friends: ${e.localizedMessage}")
+                hasError.postValue(true)
+                errorMessage.postValue("Error loading friends: ${e.localizedMessage}")
+                isLoadingFriends.postValue(false)
+            }
+        }
     }
 }

@@ -23,12 +23,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.debttracker.viewmodels.ViewModelFactory
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.debttracker.ui.screens.*
@@ -52,7 +54,8 @@ fun NavGraph() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val loginViewModel: LoginViewModel = viewModel()
+    val context = LocalContext.current
+    val loginViewModel: LoginViewModel = viewModel(factory = ViewModelFactory(context = context))
     val isLoggedIn by loginViewModel.isLoggedIn.observeAsState(false)
     val startDestination = if (isLoggedIn) Screen.Home.route else "auth"
 

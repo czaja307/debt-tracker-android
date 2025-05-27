@@ -29,6 +29,7 @@ import com.example.debttracker.ui.theme.AppBackgroundColor
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import com.example.debttracker.viewmodels.ViewModelFactory
 import com.example.debttracker.models.User
 import com.example.debttracker.viewmodels.LoginViewModel
 import androidx.compose.runtime.produceState
@@ -45,7 +46,7 @@ data class FriendDisplay(
 )
 
 @Composable
-fun FriendsScreen(navController: NavHostController, loginViewModel: LoginViewModel = viewModel()) {
+fun FriendsScreen(navController: NavHostController, loginViewModel: LoginViewModel = viewModel(factory = ViewModelFactory(context = LocalContext.current))) {
     val context = LocalContext.current
     val preferencesManager = remember { PreferencesManager(context) }
     val userCurrency by preferencesManager.userCurrency.collectAsState(initial = "USD")

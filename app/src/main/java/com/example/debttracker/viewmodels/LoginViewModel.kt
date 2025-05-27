@@ -1,9 +1,11 @@
 package com.example.debttracker.viewmodels
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.debttracker.data.PreferencesManager
 import com.example.debttracker.models.FirestoreUser
 import com.example.debttracker.models.Transaction
 import com.example.debttracker.models.User
@@ -11,14 +13,27 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.net.URL
 import java.util.*
+import javax.net.ssl.HttpsURLConnection
 
 class LoginViewModel(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
+    private val context: Context? = null
 ) : ViewModel() {
+    
+    // Initialize PreferencesManager only if context is provided
+    private val preferencesManager by lazy { context?.let { PreferencesManager(it) } }
+    private val apiKey: String = "fca_live_9r3DTzOKWo8YyvDndrpNu9Rl2rELohMD3VuxJBOj"
+    private val conversionRates = MutableLiveData<Map<String, Double>>(emptyMap())
     val email = MutableLiveData("email@p1.pl")
     val password = MutableLiveData("123456")
     private val _currentUser = MutableLiveData<User?>()
@@ -284,25 +299,69 @@ class LoginViewModel(
         }
     }
 
+    /**
+     * Calculates the balance between the current user and a friend
+     * Converts the balance to the user's preferred currency
+     */
     fun calculateBalance(friendUID: String): Double {
+        // Get transactions and essential data
         val transactions = _storedUser.value?.transactions?.get(friendUID) ?: emptyList()
-        var balance = 0.0
         val currentUserUID = _currentUser.value?.uid ?: return 0.0
 
+        // Calculate balance in PLN (base currency for stored data)
+        var balancePLN = 0.0
         transactions.forEach { transaction ->
             if (transaction.paidBy == currentUserUID) {
-                balance += transaction.amount
+                balancePLN += transaction.amount
             } else {
-                balance -= transaction.amount
+                balancePLN -= transaction.amount
             }
         }
-        return balance
+        
+        // If no context, return balance in PLN
+        if (context == null) {
+            return balancePLN
+        }
+        
+        // Convert to user's preferred currency if needed
+        return try {
+            // Use safe call with let to avoid smart cast issue
+            val preferredCurrency = preferencesManager?.let {
+                runBlocking { it.userCurrency.first() }
+            } ?: "PLN"
+            
+            // Return the balance in preferred currency
+            convertCurrency(balancePLN, "PLN", preferredCurrency)
+        } catch (e: Exception) {
+            // If anything goes wrong, return the original PLN balance
+            println("DEBUG: Error converting balance: ${e.localizedMessage}")
+            balancePLN
+        }
     }
 
     fun refreshUserData() {
         viewModelScope.launch {
             try {
                 println("DEBUG: Refreshing user data...")
+                
+                // Get preferred currency if context is available
+                var preferredCurrency = "PLN" // Default fallback
+                
+                // Using safe calls with let to avoid smart cast issue
+                context?.let { ctx ->
+                    preferencesManager?.let { prefs ->
+                        preferredCurrency = prefs.userCurrency.first()
+                        
+                        // Fetch conversion rates for the user's preferred currency 
+                        // This will be used for all balance calculations
+                        val rates = withContext(Dispatchers.IO) {
+                            fetchConversionRates(preferredCurrency)
+                        }
+                        println("DEBUG: Fetched conversion rates for $preferredCurrency: $rates")
+                        conversionRates.postValue(rates)
+                    }
+                }
+                
                 _currentUser.value?.let { user ->
                     val uid = user.uid
                     println("DEBUG: Fetching data for user with UID: $uid")
@@ -317,18 +376,31 @@ class LoginViewModel(
                                 println("DEBUG: Friends list: ${userWithData.friends}")
                                 _storedUser.postValue(userWithData)
                                 
-                                // Update total balance
-                                var total = 0.0
-                                userWithData.transactions.forEach { (friendId, transactions) ->
-                                    transactions.forEach { transaction ->
+                                // Calculate total balance in PLN
+                                var totalPLN = 0.0
+                                userWithData.friends.forEach { friendId ->
+                                    // Use calculateBalance which already handles the direction correctly
+                                    // but returns in the preferred currency, so we need the PLN version
+                                    val friendTransactions = userWithData.transactions[friendId] ?: emptyList()
+                                    var friendBalance = 0.0
+                                    
+                                    // Direct calculation in PLN
+                                    friendTransactions.forEach { transaction ->
                                         if (transaction.paidBy == uid) {
-                                            total += transaction.amount
+                                            friendBalance += transaction.amount
                                         } else {
-                                            total -= transaction.amount
+                                            friendBalance -= transaction.amount
                                         }
                                     }
+                                    
+                                    totalPLN += friendBalance
                                 }
-                                totalBalance.postValue(total)
+                                
+                                // Convert total balance to preferred currency
+                                val convertedTotal = convertCurrency(totalPLN, "PLN", preferredCurrency)
+                                totalBalance.postValue(convertedTotal)
+                                println("DEBUG: Total balance: $totalPLN PLN -> $convertedTotal $preferredCurrency")
+                                
                             } ?: println("DEBUG: Failed to create FirestoreUser from data")
                         } ?: println("DEBUG: User document data is null")
                     } ?: println("DEBUG: User document is null")
@@ -349,6 +421,91 @@ class LoginViewModel(
         val doc = db.collection("users").document(uid).get().await()
         val data = doc.data
         return (data?.get("friends") as? List<String>) ?: emptyList()
+    }
+
+    /**
+     * Fetches currency conversion rates from the API for all available currencies
+     * Used to convert transactions to the user's preferred currency
+     */
+    private suspend fun fetchConversionRates(baseCurrency: String): Map<String, Double> {
+        return try {
+            val endpoint = "https://api.freecurrencyapi.com/v1/latest"
+            val urlString = "$endpoint?apikey=$apiKey&base_currency=$baseCurrency&currencies=PLN,USD,EUR,GBP,CZK"
+            
+            val url = URL(urlString)
+            val connection = url.openConnection() as HttpsURLConnection
+            connection.requestMethod = "GET"
+            
+            if (connection.responseCode == HttpsURLConnection.HTTP_OK) {
+                val response = connection.inputStream.bufferedReader().use { it.readText() }
+                val jsonObject = JSONObject(response)
+                val dataObject = jsonObject.getJSONObject("data")
+                
+                val rates = mutableMapOf<String, Double>()
+                val currencies = listOf("PLN", "USD", "EUR", "GBP", "CZK")
+                currencies.forEach { currency ->
+                    if (dataObject.has(currency)) {
+                        rates[currency] = dataObject.getDouble(currency)
+                    }
+                }
+                rates
+            } else {
+                println("DEBUG: API Error: ${connection.responseCode}")
+                emptyMap()
+            }
+        } catch (e: Exception) {
+            println("DEBUG: Network Error when fetching rates: ${e.localizedMessage}")
+            emptyMap()
+        }
+    }
+    
+    /**
+     * Converts an amount from one currency to another using cached rates
+     * If rates are not available, it falls back to the simplified conversion
+     */
+    private fun convertCurrency(amount: Double, fromCurrency: String, toCurrency: String): Double {
+        // If same currency, no conversion needed
+        if (fromCurrency == toCurrency) return amount
+
+        val actualPreferredCurrency = preferencesManager?.let {
+            // This runBlocking call can be problematic if convertCurrency is called frequently on the main thread.
+            // Consider refactoring how preferredCurrency is passed or how conversion is triggered if performance issues arise.
+            runBlocking { it.userCurrency.first() }
+        } ?: "PLN"
+        
+        val rates = conversionRates.value ?: emptyMap() // these rates have actualPreferredCurrency as base
+
+        // Check if API rates are available and relevant for PLN <-> actualPreferredCurrency conversion
+        if (rates.isNotEmpty() && rates.containsKey("PLN")) {
+            val plnPerPreferredRate = rates["PLN"]!! // How many PLN for 1 unit of actualPreferredCurrency
+
+            if (fromCurrency == "PLN" && toCurrency == actualPreferredCurrency) {
+                // Convert amount (in PLN) to actualPreferredCurrency
+                if (plnPerPreferredRate == 0.0) {
+                    println("DEBUG: PLN per Preferred Rate is 0, cannot divide. Falling back.")
+                    // Fallback to hardcoded or return original amount to avoid crash
+                } else {
+                    return amount / plnPerPreferredRate
+                }
+            } else if (fromCurrency == actualPreferredCurrency && toCurrency == "PLN") {
+                // Convert amount (in actualPreferredCurrency) to PLN
+                return amount * plnPerPreferredRate
+            }
+        }
+        
+        // Fall back to simplified hardcoded conversion if API rates not available or specific path not met
+        println("DEBUG: Falling back to hardcoded conversion for $fromCurrency to $toCurrency")
+        return when {
+            fromCurrency == "PLN" && toCurrency == "USD" -> amount * 0.25  // 4 PLN = 1 USD
+            fromCurrency == "PLN" && toCurrency == "EUR" -> amount * 0.23  // 4.35 PLN = 1 EUR
+            fromCurrency == "PLN" && toCurrency == "GBP" -> amount * 0.20  // 5 PLN = 1 GBP
+            fromCurrency == "PLN" && toCurrency == "CZK" -> amount * 5.70  // 1 PLN = 5.7 CZK
+            toCurrency == "PLN" && fromCurrency == "USD" -> amount * 4.0   // 1 USD = 4 PLN
+            toCurrency == "PLN" && fromCurrency == "EUR" -> amount * 4.35  // 1 EUR = 4.35 PLN
+            toCurrency == "PLN" && fromCurrency == "GBP" -> amount * 5.0   // 1 GBP = 5 PLN
+            toCurrency == "PLN" && fromCurrency == "CZK" -> amount / 5.7   // 5.7 CZK = 1 PLN
+            else -> amount // Unknown conversion or already handled (e.g. PLN to PLN), return original
+        }
     }
 }
 

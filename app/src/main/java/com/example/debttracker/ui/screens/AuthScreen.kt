@@ -40,6 +40,7 @@ import com.example.debttracker.ui.components.CustomTextField
 import com.example.debttracker.ui.components.CustomUserAvatar
 import com.example.debttracker.ui.theme.AppBackgroundColor
 import com.example.debttracker.viewmodels.LoginViewModel
+import com.example.debttracker.viewmodels.ViewModelFactory
 import java.io.InputStream
 
 /**
@@ -48,7 +49,7 @@ import java.io.InputStream
 @Composable
 fun AuthHost(
     navController: NavHostController,
-    loginViewModel: LoginViewModel = viewModel()
+    loginViewModel: LoginViewModel = viewModel(factory = ViewModelFactory(context = LocalContext.current))
 ) {
     val isLoggedIn by loginViewModel.isLoggedIn.observeAsState(false)
     val showSignup by loginViewModel.showSignupView.observeAsState(false)

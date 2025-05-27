@@ -26,9 +26,11 @@ import androidx.compose.runtime.livedata.observeAsState
 import com.example.debttracker.viewmodels.LoginViewModel
 import androidx.compose.ui.graphics.Color
 import com.example.debttracker.ui.components.CustomText
+import androidx.compose.ui.platform.LocalContext
+import com.example.debttracker.viewmodels.ViewModelFactory
 
 @Composable
-fun AddFriendScreen(navController: NavHostController, loginViewModel: LoginViewModel = viewModel()) {
+fun AddFriendScreen(navController: NavHostController, loginViewModel: LoginViewModel = viewModel(factory = ViewModelFactory(context = LocalContext.current))) {
     // Use ViewModel LiveData for friend email input
     val friendEmail by loginViewModel.friendEmail.observeAsState("")
     val hasError by loginViewModel.hasError.observeAsState(false)

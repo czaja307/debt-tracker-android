@@ -15,11 +15,13 @@ import com.example.debttracker.ui.theme.AppBackgroundColor
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.platform.LocalContext
 import com.example.debttracker.viewmodels.LoginViewModel
+import com.example.debttracker.viewmodels.ViewModelFactory
 import com.example.debttracker.models.FirestoreUser
 
 @Composable
-fun InvitationsScreen(navController: NavHostController, loginViewModel: LoginViewModel = viewModel()) {
+fun InvitationsScreen(navController: NavHostController, loginViewModel: LoginViewModel = viewModel(factory = ViewModelFactory(context = LocalContext.current))) {
     Scaffold(
         containerColor = AppBackgroundColor,
         topBar = {
