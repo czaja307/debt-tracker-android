@@ -91,7 +91,7 @@ fun DebtOverTimeGraph(
 ) {
     val modelProducer = remember { CartesianChartModelProducer() }
 
-    LaunchedEffect(data) {  // <- Use data as LaunchedEffect key to update on data change
+    LaunchedEffect(data) {
         try {
             if (data.isEmpty()) {
                 // Handle empty data case
@@ -106,7 +106,6 @@ fun DebtOverTimeGraph(
                 }
             }
         } catch (e: Exception) {
-            // Handle exception (could log or show an error state)
             modelProducer.runTransaction {
                 lineSeries { series(listOf(0f)) }
                 extras { it[BottomAxisLabelKey] = listOf("Error") }
@@ -137,7 +136,7 @@ fun DebtOverTimeGraph(
 
 @Composable
 fun DebtPieChart(
-    data: Map<String, PieChartData.Slice>, 
+    data: Map<String, PieChartData.Slice>,
     title: String,
     currencySymbol: String = "$"
 ) {

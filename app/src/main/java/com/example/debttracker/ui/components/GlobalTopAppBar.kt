@@ -1,7 +1,6 @@
 package com.example.debttracker.ui.components
 
 import android.graphics.BitmapFactory
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -29,6 +28,7 @@ import com.example.debttracker.R
 import com.example.debttracker.data.PreferencesManager
 import com.example.debttracker.ui.theme.GlobalTopBarColor
 import java.io.InputStream
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +43,7 @@ fun GlobalTopAppBar(navController: NavHostController) {
     LaunchedEffect(savedProfilePictureUri) {
         if (savedProfilePictureUri.isNotEmpty()) {
             try {
-                val uri = Uri.parse(savedProfilePictureUri)
+                val uri = savedProfilePictureUri.toUri()
                 val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
                 inputStream?.use { stream ->
                     val bitmap = BitmapFactory.decodeStream(stream)

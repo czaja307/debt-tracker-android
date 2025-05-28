@@ -25,6 +25,7 @@ class AppNavigationTest {
 
     @Test
     fun aa_loginScreen_performsLoginSuccessfully() {
+        Thread.sleep(2000)
         composeTestRule.onNodeWithText("Email").assertIsDisplayed()
         composeTestRule.onNodeWithText("Password").assertIsDisplayed()
         composeTestRule.onNodeWithText("Log In").assertIsDisplayed()
@@ -38,12 +39,14 @@ class AppNavigationTest {
 
     @Test
     fun appLaunches_and_homeScreenIsVisible() {
+        Thread.sleep(2000)
         composeTestRule.onNodeWithText("You owe").assertIsDisplayed()
         composeTestRule.onNodeWithText(Screen.Home.title).assertIsDisplayed()
     }
 
     @Test
     fun navigateToFriendsScreen_fromBottomNav() {
+        Thread.sleep(2000)
         composeTestRule.onNodeWithText("You owe").assertIsDisplayed()
 
         composeTestRule.onNodeWithText(Screen.Friends.title).performClick()
@@ -54,6 +57,7 @@ class AppNavigationTest {
 
     @Test
     fun navigateToNewTransactionScreen_fromBottomNav() {
+        Thread.sleep(2000)
         composeTestRule.onNodeWithText("You owe").assertIsDisplayed()
 
         composeTestRule.onNodeWithContentDescription(
